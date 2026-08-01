@@ -1,9 +1,36 @@
 {
-  "_note": "USD per 1,000,000 tokens, list API rates. Cache rates are derived from the input rate: cache write 5m = 1.25x input, cache write 1h = 2x input, cache read = 0.1x input. Update when Anthropic changes pricing. Source: Claude API docs, June 2026.",
+  "_note": "USD per 1,000,000 tokens, list API rates. Zonder expliciete cache-velden worden ze afgeleid uit het input-tarief met de Anthropic-factoren: cache write 5m = 1.25x, cache write 1h = 2x, cache read = 0.1x. Een model mag die afleiding overrulen met absolute cache_read / cache_write_5m / cache_write_1h. Bron Claude: Claude API docs, juli 2026. Sonnet 5 staat op het lijsttarief 3/15; t/m 31-08-2026 loopt een introtarief van 2/10.",
+  "_note_non_anthropic": "DeepSeek en GLM draaien via een Anthropic-COMPATIBEL endpoint (ANTHROPIC_BASE_URL), dus het transcript legt de tokens in Anthropic-vorm vast terwijl de provider op zijn eigen model afrekent. Twee verschillen die de afleiding kapotmaken en waarom deze modellen absolute cache-tarieven krijgen: (1) DeepSeek kent GEEN opslag voor een cache write — dat is bij hen simpelweg een cache miss en dus het gewone input-tarief, waar Anthropic 1.25x en 2x rekent; (2) de cache-read-korting is veel groter dan Anthropic's 0.1x, en verschilt per model: flash 0.0028/0.14 = 0.02x, pro 0.003625/0.435 = 0.0083x. Blind de Anthropic-formule toepassen schat DeepSeek fors te hoog, en juist daar zit het overgrote deel van de tokens in cache-read. Geverifieerd op deepseek.ai/pricing, 2026-08-01.",
+  "claude-opus-5": { "input": 5.0, "output": 25.0 },
+  "claude-sonnet-5": { "input": 3.0, "output": 15.0 },
   "claude-opus-4-8": { "input": 5.0, "output": 25.0 },
   "claude-opus-4-7": { "input": 5.0, "output": 25.0 },
   "claude-opus-4-6": { "input": 5.0, "output": 25.0 },
   "claude-sonnet-4-6": { "input": 3.0, "output": 15.0 },
   "claude-haiku-4-5": { "input": 1.0, "output": 5.0 },
-  "claude-fable-5": { "input": 10.0, "output": 50.0 }
+  "claude-fable-5": { "input": 10.0, "output": 50.0 },
+
+  "deepseek-v4-flash": {
+    "input": 0.14,
+    "output": 0.28,
+    "cache_read": 0.0028,
+    "cache_write_5m": 0.14,
+    "cache_write_1h": 0.14
+  },
+  "deepseek-v4-pro": {
+    "input": 0.435,
+    "output": 0.87,
+    "cache_read": 0.003625,
+    "cache_write_5m": 0.435,
+    "cache_write_1h": 0.435
+  },
+
+  "_note_glm": "GLM via OpenRouter. OpenRouter publiceert geen apart cache-tarief maar toont een gemiddelde NA caching, dus de cache-behandeling is hier onbekend. Bewuste keuze: cache-tokens tegen het volle input-tarief rekenen, wat een BOVENGRENS geeft in plaats van een gok naar beneden. Bij de huidige volumes (0,1M tokens op een dag met 500M totaal) is het effect verwaarloosbaar. Bron: openrouter.ai/z-ai/glm-5.2, 2026-08-01.",
+  "z-ai/glm-5.2": {
+    "input": 0.72,
+    "output": 1.8,
+    "cache_read": 0.72,
+    "cache_write_5m": 0.72,
+    "cache_write_1h": 0.72
+  }
 }

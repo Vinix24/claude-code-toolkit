@@ -176,13 +176,27 @@ def collect_usage(path_prefix, date):
 
 
 def cost_for(tok, rate):
+    """USD for one model's token counts.
+
+    Cache-tarieven worden standaard afgeleid uit het input-tarief met de
+    Anthropic-factoren. Een model mag die afleiding overrulen met absolute
+    tarieven (cache_read / cache_write_5m / cache_write_1h), want die factoren
+    gelden alleen voor Anthropic. DeepSeek draait via een Anthropic-COMPATIBEL
+    endpoint, dus de tokens komen in Anthropic-vorm binnen terwijl DeepSeek op
+    zijn eigen model afrekent: daar bestaat geen opslag voor een cache write
+    (dat is een cache miss = input-tarief) en is de cache-read-korting veel
+    groter dan 0.1x. Zie de _note-velden in pricing.json.
+    """
     inp = rate["input"]
+    cw5m = rate.get("cache_write_5m", inp * CW_5M)
+    cw1h = rate.get("cache_write_1h", inp * CW_1H)
+    cr = rate.get("cache_read", inp * CR)
     return (
         tok["input"] * inp
         + tok["output"] * rate["output"]
-        + tok["cw5m"] * inp * CW_5M
-        + tok["cw1h"] * inp * CW_1H
-        + tok["cr"] * inp * CR
+        + tok["cw5m"] * cw5m
+        + tok["cw1h"] * cw1h
+        + tok["cr"] * cr
     ) / 1_000_000
 
 
