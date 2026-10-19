@@ -1,0 +1,14 @@
+{
+  "name": "claude-code-toolkit",
+  "owner": {
+    "name": "Vinix24"
+  },
+  "plugins": [
+    {
+      "name": "context-rotation",
+      "source": "./context-rotation",
+      "version": "1.0.0",
+      "description": "Measures how full a Claude Code session's context is, warns before it degrades, and carries a checked handover into a fresh session after /clear."
+    }
+  ]
+}
