@@ -9,6 +9,12 @@
       "source": "./context-rotation",
       "version": "1.0.1",
       "description": "Measures how full a Claude Code session's context is, warns before it degrades, and carries a checked handover into a fresh session after /clear."
+    },
+    {
+      "name": "slop-lint",
+      "source": "./slop-lint",
+      "version": "1.0.0",
+      "description": "Deterministic linter for AI tics in Dutch prose: em-dashes, buzzwords, comma chains and rhetorical frames. Lints every text file Claude writes and hands the findings back so Claude fixes them."
     }
   ]
 }

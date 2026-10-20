@@ -8,6 +8,7 @@ Small, composable, local-first tools for [Claude Code](https://claude.com/claude
 |------|--------------|
 | [`timekeeper/`](timekeeper/) | Measure *active* work time per session (prompt-to-stop, idle excluded), plus token usage and API-equivalent cost per working directory. Two hooks + one reporting script. |
 | [`context-rotation/`](context-rotation/) | Measures how full a Claude Code session's context is, warns before it degrades, and carries a checked handover into a fresh session after /clear. |
+| [`slop-lint/`](slop-lint/) | Deterministic linter for AI tics in Dutch prose. Lints every text file Claude writes and hands the findings back; a skill runs the same check on demand, also in Claude Desktop. |
 
 More tools land here over time. Each folder is self-contained: read its README, run its installer.
 
