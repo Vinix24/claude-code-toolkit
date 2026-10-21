@@ -15,6 +15,12 @@
       "source": "./slop-lint",
       "version": "1.0.0",
       "description": "Deterministic linter for AI tics in Dutch prose: em-dashes, buzzwords, comma chains and rhetorical frames. Lints every text file Claude writes and hands the findings back so Claude fixes them."
+    },
+    {
+      "name": "codex-image",
+      "source": "./codex-image",
+      "version": "1.0.0",
+      "description": "Generate images through your own Codex CLI login and prepare opaque PNGs for blogs and LinkedIn, with a local archive and daily cap."
     }
   ]
 }

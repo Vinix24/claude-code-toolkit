@@ -1,0 +1,8 @@
+{
+  "name": "codex-image",
+  "version": "1.0.0",
+  "description": "Generate images through your own Codex CLI login and prepare opaque PNGs for blogs and LinkedIn, with a local archive and daily cap.",
+  "author": {
+    "name": "Vinix24"
+  }
+}
