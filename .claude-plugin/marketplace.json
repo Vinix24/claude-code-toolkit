@@ -15,6 +15,12 @@
       "source": "./slop-lint",
       "version": "1.0.0",
       "description": "Deterministic linter for AI tics in Dutch prose: em-dashes, buzzwords, comma chains and rhetorical frames. Lints every text file Claude writes and hands the findings back so Claude fixes them."
+    },
+    {
+      "name": "context-meter",
+      "source": "./context-meter",
+      "version": "1.0.0",
+      "description": "One line above the prompt that shows how full the context is, in the bands of the context-rotation guard: green, yellow and red."
     }
   ]
 }
