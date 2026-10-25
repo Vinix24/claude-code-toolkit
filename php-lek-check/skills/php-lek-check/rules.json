@@ -1,0 +1,169 @@
+{
+  "schema": 3,
+  "verified": "24 oktober 2026",
+  "purpose": "Deze check helpt je de juiste vraag aan je hoster te stellen. Hij stelt niet vast of je website kwetsbaar is.",
+  "page_intro": "Deze check helpt je de juiste vraag aan je websitebouwer of hoster te stellen. Je websiteadres gaat nergens heen: alles gebeurt in je eigen browser.",
+  "button": "Check mijn PHP-versie",
+  "comparison": "Vergelijk per reeks: 8.2.34 kan kwetsbaar zijn, 8.2.35 is de reparatie. Andere reeksen: 8.3.36, 8.4.27 en 8.5.12.",
+  "patches": {
+    "8.2": 35,
+    "8.3": 36,
+    "8.4": 27,
+    "8.5": 12
+  },
+  "patterns": {
+    "version": "\\bPHP/(\\d+)\\.(\\d+)\\.(\\d+)([a-zA-Z0-9.+~_-]*)",
+    "php": "\\bPHP\\b",
+    "cms": "\\b(?:WordPress|Joomla|Drupal)\\b",
+    "path": "\\.php(?=[/?#]|$)|/(?:wp-content|wp-includes|wp-json)/",
+    "cookie": "(?:^|;)\\s*PHPSESSID\\s*=",
+    "link": "(?:^|;)\\s*rel\\s*=\\s*[\"']https://api\\.w\\.org/[\"']",
+    "prerelease": "(?:alpha|beta|rc|dev)"
+  },
+  "rules": [
+    {
+      "when": {
+        "max_branch": [
+          7,
+          3
+        ],
+        "suffix": true
+      },
+      "result": "unsupported_suffix"
+    },
+    {
+      "when": {
+        "max_branch": [
+          7,
+          3
+        ]
+      },
+      "result": "unsupported"
+    },
+    {
+      "when": {
+        "max_branch": [
+          8,
+          1
+        ],
+        "suffix": true
+      },
+      "result": "distribution"
+    },
+    {
+      "when": {
+        "max_branch": [
+          8,
+          1
+        ]
+      },
+      "result": "legacy"
+    },
+    {
+      "when": {
+        "known_branch": false
+      },
+      "result": "unrecognized"
+    },
+    {
+      "when": {
+        "prerelease": true
+      },
+      "result": "unrecognized"
+    },
+    {
+      "when": {
+        "fixed": true
+      },
+      "result": "updated"
+    },
+    {
+      "when": {
+        "suffix": true
+      },
+      "result": "distribution"
+    },
+    {
+      "when": {},
+      "result": "outdated"
+    }
+  ],
+  "results": {
+    "outdated": {
+      "code": "verouderd",
+      "title": "Een oud PHP-nummer is zichtbaar.",
+      "assessment": "kan kwetsbaar zijn",
+      "explanation": "De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Vraag je hoster om bevestiging.",
+      "priority": 3
+    },
+    "distribution": {
+      "code": "distributie",
+      "title": "Verouderde PHP met distributie-achtervoegsel",
+      "assessment": "onbekend",
+      "explanation": "De leverancier kan de reparatie al hebben toegepast op deze oudere versie. Vraag dit na.",
+      "priority": 4
+    },
+    "legacy": {
+      "code": "oud",
+      "title": "PHP 7.4 tot en met 8.1",
+      "assessment": "kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast",
+      "explanation": "De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Geen gewone PHP-update voor deze versie. PHP biedt broncode-backports voor 7.4, 8.0 en 8.1. Vraag je hoster om bevestiging van de toegepaste backport, of anders om een upgrade.",
+      "priority": 2
+    },
+    "updated": {
+      "code": "bijgewerkt",
+      "title": "Het versienummer lijkt bijgewerkt.",
+      "assessment": "lijkt bijgewerkt volgens het versienummer",
+      "explanation": "De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of een andere server komen. Achter één site kunnen meer servers staan. Vraag bevestiging per server.",
+      "priority": 6
+    },
+    "hidden": {
+      "code": "verborgen",
+      "title": "PHP aanwezig, versie verborgen",
+      "assessment": "onbekend",
+      "explanation": "Een signaal is geen bewijs dat PHP hier draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.",
+      "priority": 7
+    },
+    "none": {
+      "code": "geen_php",
+      "title": "Geen PHP gezien",
+      "assessment": "onbekend",
+      "explanation": "Geen aanwijzing gevonden. Dat bewijst niet dat er geen PHP draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.",
+      "priority": 8
+    },
+    "unsupported": {
+      "code": "oud",
+      "title": "Een PHP-versie zonder reparatie van PHP is zichtbaar",
+      "assessment": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+      "explanation": "De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.",
+      "priority": 0
+    },
+    "unsupported_suffix": {
+      "code": "oud",
+      "title": "Een PHP-versie zonder reparatie van PHP is zichtbaar",
+      "assessment": "kan kwetsbaar zijn, vraag de leverancier om bevestiging",
+      "explanation": "De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.",
+      "priority": 1
+    },
+    "unrecognized": {
+      "code": null,
+      "title": "Controle niet afgerond",
+      "assessment": "onbekend",
+      "explanation": "Deze PHP-reeks of testversie valt buiten de gecontroleerde versietabel. Vraag het na bij je hoster.",
+      "priority": 5
+    }
+  },
+  "message": "Hallo,\n\nIk heb voor mijn website {url} naar zichtbare PHP-informatie gekeken. Gevonden PHP-versie: {version}. Deze check stelt niet vast of mijn website kwetsbaar is.\n\nWillen jullie drie dingen bevestigen?\n1. Wat is de exacte PHP-versie per server achter mijn website?\n2. Staat de update van 21 oktober 2026 voor PHP2Shell, CVE-2026-109618 en CVE-2026-109619, op elk van die servers? De reparatie is per reeks PHP 8.2.35, 8.3.36, 8.4.27 of 8.5.12, of een latere versie binnen dezelfde reeks.\n3. Zo nee, bevestig de toegepaste backport van de leverancier (een reparatie voor een oudere versie), of geef een datum voor een upgrade naar een ondersteunde reeks.\n\nGraag per server de versie en eventuele backport bevestigen. Alleen WordPress bijwerken lost dit niet op. Bedankt!",
+  "builder_steps": [
+    "Hostingpaneel (cPanel, DirectAdmin of Plesk): controleer de volledige PHP-versie per website. Bij alleen 8.3: vraag het volledige nummer, zoals 8.3.36.",
+    "Tijdelijk versiebestand: plaats alleen <?php echo PHP_VERSION; op de site, open het en verwijder het bestand direct. Dit toont de PHP-versie achter de site. php -v op de opdrachtregel kan een andere versie tonen. Een phpinfo()-pagina geeft meer prijs dan nodig is en mag nooit blijven staan.",
+    "Controleer de statuspagina of mail van de hoster over PHP2Shell, CVE-2026-109618 en CVE-2026-109619.",
+    "Debian of Ubuntu: controleer het changelog (de wijzigingenlijst) of de melding over de reparatie van het exacte pakket. Laat de leverancier bevestigen of beide CVE’s daarin zijn opgelost."
+  ],
+  "signals": {
+    "custom": "X-Powered-By zonder herkenbare PHP-vermelding; zwak signaal, kan ook een andere techniek zijn.",
+    "cookie": "Cookienaam PHPSESSID gevonden (waarde niet getoond).",
+    "link": "Link-header bevat rel=\"https://api.w.org/\".",
+    "cms_flag": "Zelf aangegeven: WordPress, Joomla of Drupal."
+  }
+}

@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>PHP-lek-check · Een duidelijke vraag aan je hoster</title>
+  <style>
+    :root { --ink:#183b32; --muted:#4c6156; --paper:#f8f6ef; --white:#fffefa; --line:#b9c8bd; --leaf:#e3eddf; --gold:#f4e6c9; --focus:#916020; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--ink); text-underline-offset:4px; overflow-wrap:anywhere; }
+    button, input, textarea { font:inherit; }
+    button, .button { min-height:48px; padding:12px 22px; border:1.5px solid var(--ink); border-radius:8px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; background:var(--white); color:var(--ink); font-weight:650; }
+    button:hover,.button:hover { background:var(--leaf); }
+    .primary { background:var(--ink); color:var(--white); }
+    .primary:hover { background:#285548; }
+    :focus-visible { outline:3px solid var(--focus); outline-offset:4px; }
+    .skip { position:absolute; top:-100px; left:12px; padding:12px; background:white; z-index:2; }
+    .skip:focus { top:12px; }
+    .wrap { max-width:1100px; margin:0 auto; padding:0 28px; }
+    .masthead { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:26px 0 18px; border-bottom:1px solid var(--line); font-size:14px; }
+    .brand { font-weight:800; letter-spacing:.02em; }
+    .brand span { display:inline-block; background:var(--ink); color:var(--paper); padding:2px 8px; margin-right:10px; border-radius:5px; font-family:Georgia,serif; font-style:italic; }
+    .small,.eyebrow { font-size:14px; color:var(--muted); }
+    .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-weight:750; }
+    .intro { max-width:850px; padding:22px 0 0; margin:0; font-size:16px; }
+    .hero { padding:42px 0 40px; max-width:850px; }
+    h1 { font:normal clamp(36px,5.7vw,64px)/1.08 Georgia,"Times New Roman",serif; letter-spacing:-.03em; margin:0 0 24px; }
+    h1 em { color:#42664e; font-weight:normal; }
+    h2 { font:normal clamp(26px,3vw,34px)/1.2 Georgia,"Times New Roman",serif; margin:8px 0 18px; }
+    h3 { font-size:21px; line-height:1.3; margin:8px 0 12px; }
+    p { margin:0 0 16px; }
+    .hero p { max-width:640px; font-size:19px; }
+    .panel { background:var(--white); padding:32px; border:1px solid var(--line); border-radius:16px; margin-bottom:24px; }
+    .route-a { background:var(--leaf); border-color:#b4c8af; }
+    .route-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+    .tag { flex:none; border:1px solid #647e60; border-radius:100px; padding:4px 12px; font-size:13px; font-weight:700; }
+    .steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; padding:0; margin:28px 0; list-style:none; }
+    .step-number { display:inline-grid; place-items:center; width:28px; height:28px; margin-right:8px; background:var(--ink); border-radius:50%; color:white; font:700 14px system-ui,sans-serif; }
+    .steps h3 { font-size:18px; }
+    .steps p { font-size:15px; margin-top:12px; }
+    .steps svg { width:100%; max-width:260px; height:124px; display:block; margin:0 auto 18px; color:var(--ink); }
+    .bookmark-area { padding:24px; border:1px dashed #718b69; border-radius:12px; background:rgb(255 254 250 / .65); text-align:center; }
+    .bookmark-area .small { max-width:650px; margin:12px auto 0; }
+    #bookmarklet { cursor:grab; padding:15px 28px; }
+    .route-link { display:inline-block; margin:16px 0 0; font-weight:600; }
+    details { border-top:1px solid var(--line); padding:14px 0; }
+    details:last-child { padding-bottom:0; }
+    summary { cursor:pointer; font-weight:650; padding:5px 0; }
+    details p,details ol { margin-top:12px; }
+    pre { max-height:350px; overflow:auto; padding:18px; background:#f0f2eb; border:1px solid var(--line); border-radius:8px; font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; }
+    code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.88em; overflow-wrap:anywhere; }
+    label { display:block; font-weight:650; margin:20px 0 6px; }
+    input[type=text],textarea { width:100%; padding:12px 14px; border:1.5px solid #758879; border-radius:8px; color:var(--ink); background:#fff; min-height:48px; }
+    textarea { resize:vertical; }
+    label textarea { display:block; margin-top:10px; font-weight:400; font-size:15px; line-height:1.6; }
+    .check-row { display:flex; gap:12px; align-items:flex-start; margin:20px 0; font-weight:500; cursor:pointer; }
+    input[type=checkbox] { width:22px; height:22px; flex:none; margin-top:4px; accent-color:var(--ink); }
+    .two-col { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:32px; }
+    .form-area { border-left:1px solid var(--line); padding-left:32px; }
+    .form-area label:first-child { margin-top:0; }
+    #manual-status { margin-top:10px; }
+    .notice { background:var(--gold); padding:16px 20px; border-left:3px solid #916020; font-size:15px; }
+    .result-panel { border:2px solid var(--ink); }
+    .assessment { padding:12px 16px; background:var(--gold); font-weight:700; border-radius:8px; }
+    .result-view textarea { margin-bottom:16px; }
+    .body-section { padding:28px 0; border-top:1px solid var(--line); }
+    .body-section > p { max-width:800px; }
+    .builder-list { padding-left:26px; }
+    .builder-list li { margin:0 0 16px; padding-left:8px; }
+    .outcomes { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .outcome { padding:20px; border:1px solid var(--line); border-radius:10px; background:var(--white); }
+    .outcome h3 { font-size:18px; }
+    .outcome p { font-size:15px; }
+    .sources { padding-left:22px; font-size:14px; }
+    .sources li { margin-bottom:8px; }
+    footer { margin:20px 0 40px; padding-top:20px; border-top:1px solid var(--line); }
+    [hidden] { display:none !important; }
+    @media(max-width:760px) { .wrap { padding:0 18px; } .hero { padding:32px 0; } .panel { padding:22px; } .steps { grid-template-columns:1fr; gap:24px; } .steps svg { max-width:250px; margin-left:0; } .two-col { grid-template-columns:1fr; gap:24px; } .form-area { border-left:0; border-top:1px solid var(--line); padding:24px 0 0; } .outcomes { grid-template-columns:1fr; } .tag { display:none; } .masthead { align-items:flex-start; } }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+    @media print { button,.bookmark-area,#bookmark-code,form { display:none; } body { background:white; } .panel { break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<a class="skip" href="#route-b">Naar de plakroute</a>
+<div class="wrap">
+  <header>
+    <div class="masthead"><div class="brand"><span>php</span> PHP-lek-check</div><span class="small">Op je eigen computer. Zonder account.</span></div>
+    <p class="intro">Deze check helpt je de juiste vraag aan je websitebouwer of hoster te stellen. Je websiteadres gaat nergens heen: alles gebeurt in je eigen browser.</p>
+    <div class="hero">
+      <h1>Een helder antwoord<br><em>begint bij je hoster.</em></h1>
+      <p>Lees wat je website laat zien over PHP. En maak meteen een bericht voor de mensen die je website beheren.</p>
+      <p class="small">PHP is software waarop veel websites draaien. Deze check stelt niet vast of je website kwetsbaar is.</p>
+    </div>
+  </header>
+  <main>
+    <section class="panel route-a" id="route-a" aria-labelledby="route-a-title">
+      <div class="route-heading"><div><p class="eyebrow">Route A · op je computer</p><h2 id="route-a-title">Neem de check mee naar je website</h2></div><span class="tag">Begin hier</span></div>
+      <p>Maak één keer een bladwijzer. Je gebruikt de knop daarna op je eigen website.</p>
+      <ol class="steps">
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245M18 20h4m6 0h4m6 0h4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="17" y="42" width="109" height="19" rx="4" fill="#e3eddf" stroke="currentColor"/><path d="M161 96q8-32-22-40m0 0 3 14m-3-14 15 1" fill="none" stroke="currentColor" stroke-width="2"/><rect x="151" y="91" width="81" height="25" rx="5" fill="#183b32"/><text x="164" y="108" font-size="13" fill="white" font-family="system-ui,sans-serif">PHP-check</text></svg>
+          <h3><span class="step-number">1</span>Sleep de knop</h3><p>Sleep de groene knop hieronder naar je bladwijzerbalk, de rij favoriete websites bovenaan je browser.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245" stroke="currentColor" stroke-width="2"/><rect x="18" y="16" width="216" height="12" rx="4" fill="#e3eddf"/><text x="25" y="26" font-size="10" font-family="system-ui,sans-serif" fill="currentColor">jouwsite.nl</text><rect x="22" y="49" width="63" height="42" rx="3" fill="#e3eddf"/><path d="M100 53h111m-111 15h91m-91 15h105" stroke="currentColor" stroke-width="4"/></svg>
+          <h3><span class="step-number">2</span>Open je eigen website</h3><p>Ga naar de gewone startpagina. Je hoeft niets te installeren of op je website te veranderen.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245" stroke="currentColor" stroke-width="2"/><rect x="18" y="17" width="90" height="12" rx="3" fill="#183b32"/><rect x="39" y="45" width="173" height="70" rx="6" fill="#e3eddf" stroke="currentColor" stroke-width="2"/><path d="M54 60h115m-115 12h133m-133 12h100" stroke="currentColor" stroke-width="3"/><rect x="54" y="94" width="85" height="11" rx="3" fill="#183b32"/></svg>
+          <h3><span class="step-number">3</span>Klik op de bladwijzer</h3><p>Je krijgt de uitslag in een venster op je site. Kopieer het bericht en stuur het naar je bouwer of hoster.</p>
+        </li>
+      </ol>
+      <div class="bookmark-area"><a id="bookmarklet" class="button primary" href="#bookmark-code" draggable="true">Check mijn PHP-versie</a><p class="small">Sleep deze knop naar je bladwijzerbalk. Een gewone klik hier toont de code en uitleg.</p></div>
+      <a class="route-link" href="#route-b">Werkt de knop niet? Gebruik route B ↓</a>
+      <p class="small">De knop kan worden geblokkeerd door instellingen van de site. Op een telefoon of in een browser zonder bladwijzerbalk is route B meestal handiger. Niet alle cookies zijn leesbaar.</p>
+      <details><summary>Ik zie geen bladwijzerbalk</summary><p>In Chrome, Edge en Firefox op Windows: druk Ctrl+Shift+B. Op een Mac: Cmd+Shift+B in Chrome of Edge. In Safari kies je Weergave → Toon favorietenbalk. In Firefox kun je via Beeld → Werkbalken de bladwijzerbalk aanzetten.</p></details>
+      <details id="bookmark-code"><summary>Met het toetsenbord gebruiken of de code lezen</summary><p>Maak een nieuwe bladwijzer. Geef die de naam <strong>Check mijn PHP-versie</strong>. Vervang het adres door de code uit dit vak. Gebruik de bladwijzer alleen op je eigen site.</p><label for="bookmark-url">Adres voor de bladwijzer</label><textarea id="bookmark-url" rows="3" readonly spellcheck="false"></textarea><button id="copy-bookmark" type="button">Kopieer bladwijzercode</button><p id="bookmark-status" class="small" role="status"></p><p>Dit is dezelfde code, leesbaar opgemaakt:</p><pre id="readable-code" tabindex="0"></pre></details>
+    </section>
+
+    <section class="panel" id="route-b" aria-labelledby="route-b-title">
+      <p class="eyebrow">Route B · ook op je telefoon</p><h2 id="route-b-title">Plak wat je website laat zien</h2>
+      <p>Geen werkende knop? Kopieer één waarde uit je browser, of vraag die aan je bouwer. Een leeg vak mag ook.</p>
+      <div class="two-col"><div>
+        <h3>Waar vind je die waarde?</h3>
+        <details><summary>Chrome</summary><p>Open je eigen website. Druk F12, of op een Mac Cmd+Option+I. Kies <strong>Network / Netwerk</strong>. Herlaad de pagina. Kies het verzoek naar je pagina (meestal het eerste, type document). Open <strong>Headers → Response Headers</strong> en zoek <code>X-Powered-By</code>. Kopieer alleen de waarde erachter.</p></details>
+        <details><summary>Microsoft Edge</summary><p>Open je eigen website. Druk F12 of Ctrl+Shift+I. Op een Mac: Cmd+Option+I. Kies <strong>Network / Netwerk</strong>, herlaad de pagina en klik op het verzoek naar de pagina. Kijk bij <strong>Headers → Response Headers</strong> naar <code>X-Powered-By</code>.</p></details>
+        <details><summary>Firefox</summary><p>Open je eigen website. Druk F12 en kies <strong>Netwerk</strong>. Je kunt ook Ctrl+Shift+E gebruiken, of Cmd+Option+E op een Mac. Herlaad de pagina. Klik op het verzoek naar je pagina. Zoek bij <strong>Headers → Response Headers / Antwoordheaders</strong> naar <code>X-Powered-By</code>.</p></details>
+        <details><summary>Safari op een Mac</summary><p>Kies eerst <strong>Safari → Instellingen → Geavanceerd</strong>. Zet <strong>Toon functies voor webontwikkelaars</strong> aan. Open je eigen site en kies <strong>Ontwikkel → Toon webinfo</strong>, of druk Cmd+Option+I. Kies <strong>Netwerk</strong>, herlaad de pagina en open het verzoek naar je pagina. Zoek in de antwoordheaders naar <code>X-Powered-By</code>.</p></details>
+        <p class="small">Op een telefoon is F12 meestal niet beschikbaar. Laat je bouwer de waarde sturen. Je kunt ook alleen het vinkje invullen of het vak leeg laten. Je krijgt dan een bericht waarmee je de PHP-versie kunt navragen.</p>
+      </div><form id="manual-form" class="form-area" autocomplete="off">
+        <label for="powered-by">Waarde van X-Powered-By</label><textarea id="powered-by" rows="2" placeholder="Bijvoorbeeld: PHP/8.3.20" spellcheck="false" aria-describedby="header-help"></textarea><p id="header-help" class="small">Niet gevonden? Laat dit vak leeg. Een WordPress-versie is geen PHP-versie.</p>
+        <label class="check-row"><input id="cms" type="checkbox"><span>Mijn site draait op WordPress, Joomla of Drupal</span></label>
+        <label for="site-address">Je websiteadres <span class="small">(niet verplicht)</span></label><input id="site-address" type="text" inputmode="url" placeholder="https://jouwsite.nl" autocomplete="off" spellcheck="false" aria-describedby="address-help"><p id="address-help" class="small">Alleen voor in het bericht. Dit adres wordt niet bezocht of verstuurd.</p>
+        <button class="primary" type="submit">Maak mijn bericht</button><p id="manual-status" class="small" role="status"></p>
+      </form></div>
+    </section>
+
+    <section class="panel result-panel" id="result" aria-labelledby="result-title" tabindex="-1" hidden><p class="eyebrow">Jouw volgende stap</p><h2 id="result-title">De uitslag en je bericht</h2><div id="result-body"></div></section>
+    <noscript><p class="notice">JavaScript staat uit. De lokale beoordeling en bladwijzer werken dan niet. Je kunt de uitleg hieronder gebruiken om de volledige PHP-versie en de update van 21 oktober 2026 bij je hoster na te vragen.</p></noscript>
+
+    <section class="body-section" aria-labelledby="privacy-title"><h2 id="privacy-title">Waarom je website nergens heen gaat</h2><p>Deze pagina verstuurt je ingevulde adres, headers en uitslag niet. Er zijn geen externe lettertypen, meetcodes of afbeeldingen. De pagina haalt niets op zodra zij is geopend.</p><p>De bladwijzer doet op je eigen site één verzoek naar de pagina die je al open hebt. De knop volgt geen doorverwijzingen en probeert geen andere adressen. Er gaat niets naar mij, een externe scanner of een database.</p><p>De check schrijft niets in de browseropslag en maakt zelf geen cookies. De bladwijzer gebruikt wel de bestaande cookies van je eigen site; die site kan bij het antwoord zelf een cookie meesturen. Het tijdelijke venster verdwijnt met <strong>Sluiten</strong>. Pas als je op <strong>Kopieer bericht</strong> klikt, zet je zelf tekst op je klembord.</p><h3>Je kunt het zelf nagaan</h3><ol><li>Open de broncode van deze pagina. Alle code staat in dit ene bestand.</li><li>Bewaar het HTML-bestand op je computer via het browsermenu. Open dat bestand en zet je internet uit.</li><li>Gebruik route B. De beoordeling en het bericht blijven werken. De code is openbaar te lezen.</li></ol><p class="small">Bronlinks onderaan worden alleen geopend als je er zelf op klikt. De bladwijzer gebruikt internet om je eigen site te bereiken. Route B doet dat niet.</p></section>
+
+    <section class="body-section" aria-labelledby="builder-title"><p class="eyebrow">Voor je websitebouwer</p><h2 id="builder-title">Zo weet je het zeker</h2><p>Headers zijn aanwijzingen. Laat de beheerder kijken naar de installatie die je website echt gebruikt. Deze stappen staan ook onder het bericht dat je kopieert.</p><ol class="builder-list"><li>Hostingpaneel (cPanel, DirectAdmin of Plesk): controleer de volledige PHP-versie per website. Bij alleen 8.3: vraag het volledige nummer, zoals 8.3.36.</li><li>Tijdelijk versiebestand: plaats alleen &lt;?php echo PHP_VERSION; op de site, open het en verwijder het bestand direct. Dit toont de PHP-versie achter de site. php -v op de opdrachtregel kan een andere versie tonen. Een phpinfo()-pagina geeft meer prijs dan nodig is en mag nooit blijven staan.</li><li>Controleer de statuspagina of mail van de hoster over PHP2Shell, CVE-2026-109618 en CVE-2026-109619.</li><li>Debian of Ubuntu: controleer het changelog (de wijzigingenlijst) of de melding over de reparatie van het exacte pakket. Laat de leverancier bevestigen of beide CVE’s daarin zijn opgelost.</li></ol><p class="small">Alleen de beheerder met toegang en toestemming voert deze stappen uit. Deze check plaatst zelf geen bestanden op je website.</p></section>
+
+    <section class="body-section" aria-labelledby="outcomes-title"><h2 id="outcomes-title">Wat betekenen de uitkomsten?</h2><p>Een verborgen versie of geen PHP-signaal komt vaak voor. Daaruit volgt geen conclusie over kwetsbaarheid. Stuur in beide gevallen het bericht naar je hoster.</p><div class="outcomes"><article class="outcome"><h3>PHP aanwezig, versie verborgen</h3><p><strong>onbekend</strong></p><p>Een signaal is geen bewijs dat PHP hier draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.</p></article>
+<article class="outcome"><h3>Geen PHP gezien</h3><p><strong>onbekend</strong></p><p>Geen aanwijzing gevonden. Dat bewijst niet dat er geen PHP draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.</p></article>
+<article class="outcome"><h3>Een oud PHP-nummer is zichtbaar.</h3><p><strong>kan kwetsbaar zijn</strong></p><p>De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Vraag je hoster om bevestiging.</p></article>
+<article class="outcome"><h3>Verouderde PHP met distributie-achtervoegsel</h3><p><strong>onbekend</strong></p><p>De leverancier kan de reparatie al hebben toegepast op deze oudere versie. Vraag dit na.</p></article>
+<article class="outcome"><h3>Een PHP-versie zonder reparatie van PHP is zichtbaar</h3><p><strong>kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig</strong></p><p>De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.</p></article>
+<article class="outcome"><h3>Een PHP-versie zonder reparatie van PHP is zichtbaar</h3><p><strong>kan kwetsbaar zijn, vraag de leverancier om bevestiging</strong></p><p>De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.</p></article>
+<article class="outcome"><h3>PHP 7.4 tot en met 8.1</h3><p><strong>kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast</strong></p><p>De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Geen gewone PHP-update voor deze versie. PHP biedt broncode-backports voor 7.4, 8.0 en 8.1. Vraag je hoster om bevestiging van de toegepaste backport, of anders om een upgrade.</p></article>
+<article class="outcome"><h3>Het versienummer lijkt bijgewerkt.</h3><p><strong>lijkt bijgewerkt volgens het versienummer</strong></p><p>De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of een andere server komen. Achter één site kunnen meer servers staan. Vraag bevestiging per server.</p></article></div><p class="small">Een distributie-achtervoegsel, zoals <code>-1~deb12u1</code>, kan wijzen op een reparatie van de leverancier. Bij 7.3 en ouder blijft de vraag om bevestiging extra belangrijk. Een verklaring van de leverancier gaat verder dan een zichtbaar versienummer.</p></section>
+
+    <section class="body-section" id="sources" aria-labelledby="sources-title"><h2 id="sources-title">Bronnen en datum</h2><p>De versietabel is gecontroleerd op <strong>24 oktober 2026</strong>. De pagina haalt geen nieuwe tabel op. Het gaat om PHP2Shell: CVE-2026-109618 en CVE-2026-109619.</p><ul class="sources"><li><a href="https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w" rel="noreferrer">PHP-advisory CVE-2026-109618</a></li><li><a href="https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp" rel="noreferrer">PHP-advisory CVE-2026-109619</a></li><li><a href="https://www.php.net/archive/2026.php" rel="noreferrer">PHP-aankondiging van 21 oktober 2026 en broncode-backports</a></li><li><a href="https://developer.chrome.com/docs/devtools/network/reference" rel="noreferrer">Chrome: antwoordheaders bekijken</a></li><li><a href="https://learn.microsoft.com/en-us/microsoft-edge/devtools/overview" rel="noreferrer">Edge: browserhulpmiddelen openen</a></li><li><a href="https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/index.html" rel="noreferrer">Firefox: het netwerkpaneel</a></li><li><a href="https://webkit.org/web-inspector/enabling-web-inspector/" rel="noreferrer">Safari: Web Inspector aanzetten</a></li></ul></section>
+  </main>
+  <footer><p><strong>Alleen voor je eigen site of met schriftelijke toestemming.</strong> Zie je iets bij een site van een ander? Meld het aan de eigenaar en test niet verder.</p><p class="small">De check is gebouwd door een AI-codeeragent op Vincents opdracht en daarna door een tweede AI-agent getest. De check stelt niet vast of je website kwetsbaar is.</p></footer>
+</div>
+<script type="application/json" id="rules-data">{"schema":3,"verified":"24 oktober 2026","purpose":"Deze check helpt je de juiste vraag aan je hoster te stellen. Hij stelt niet vast of je website kwetsbaar is.","page_intro":"Deze check helpt je de juiste vraag aan je websitebouwer of hoster te stellen. Je websiteadres gaat nergens heen: alles gebeurt in je eigen browser.","button":"Check mijn PHP-versie","comparison":"Vergelijk per reeks: 8.2.34 kan kwetsbaar zijn, 8.2.35 is de reparatie. Andere reeksen: 8.3.36, 8.4.27 en 8.5.12.","patches":{"8.2":35,"8.3":36,"8.4":27,"8.5":12},"patterns":{"version":"\\bPHP/(\\d+)\\.(\\d+)\\.(\\d+)([a-zA-Z0-9.+~_-]*)","php":"\\bPHP\\b","cms":"\\b(?:WordPress|Joomla|Drupal)\\b","path":"\\.php(?=[/?#]|$)|/(?:wp-content|wp-includes|wp-json)/","cookie":"(?:^|;)\\s*PHPSESSID\\s*=","link":"(?:^|;)\\s*rel\\s*=\\s*[\"']https://api\\.w\\.org/[\"']","prerelease":"(?:alpha|beta|rc|dev)"},"rules":[{"when":{"max_branch":[7,3],"suffix":true},"result":"unsupported_suffix"},{"when":{"max_branch":[7,3]},"result":"unsupported"},{"when":{"max_branch":[8,1],"suffix":true},"result":"distribution"},{"when":{"max_branch":[8,1]},"result":"legacy"},{"when":{"known_branch":false},"result":"unrecognized"},{"when":{"prerelease":true},"result":"unrecognized"},{"when":{"fixed":true},"result":"updated"},{"when":{"suffix":true},"result":"distribution"},{"when":{},"result":"outdated"}],"results":{"outdated":{"code":"verouderd","title":"Een oud PHP-nummer is zichtbaar.","assessment":"kan kwetsbaar zijn","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Vraag je hoster om bevestiging.","priority":3},"distribution":{"code":"distributie","title":"Verouderde PHP met distributie-achtervoegsel","assessment":"onbekend","explanation":"De leverancier kan de reparatie al hebben toegepast op deze oudere versie. Vraag dit na.","priority":4},"legacy":{"code":"oud","title":"PHP 7.4 tot en met 8.1","assessment":"kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Geen gewone PHP-update voor deze versie. PHP biedt broncode-backports voor 7.4, 8.0 en 8.1. Vraag je hoster om bevestiging van de toegepaste backport, of anders om een upgrade.","priority":2},"updated":{"code":"bijgewerkt","title":"Het versienummer lijkt bijgewerkt.","assessment":"lijkt bijgewerkt volgens het versienummer","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of een andere server komen. Achter één site kunnen meer servers staan. Vraag bevestiging per server.","priority":6},"hidden":{"code":"verborgen","title":"PHP aanwezig, versie verborgen","assessment":"onbekend","explanation":"Een signaal is geen bewijs dat PHP hier draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.","priority":7},"none":{"code":"geen_php","title":"Geen PHP gezien","assessment":"onbekend","explanation":"Geen aanwijzing gevonden. Dat bewijst niet dat er geen PHP draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.","priority":8},"unsupported":{"code":"oud","title":"Een PHP-versie zonder reparatie van PHP is zichtbaar","assessment":"kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.","priority":0},"unsupported_suffix":{"code":"oud","title":"Een PHP-versie zonder reparatie van PHP is zichtbaar","assessment":"kan kwetsbaar zijn, vraag de leverancier om bevestiging","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.","priority":1},"unrecognized":{"code":null,"title":"Controle niet afgerond","assessment":"onbekend","explanation":"Deze PHP-reeks of testversie valt buiten de gecontroleerde versietabel. Vraag het na bij je hoster.","priority":5}},"message":"Hallo,\n\nIk heb voor mijn website {url} naar zichtbare PHP-informatie gekeken. Gevonden PHP-versie: {version}. Deze check stelt niet vast of mijn website kwetsbaar is.\n\nWillen jullie drie dingen bevestigen?\n1. Wat is de exacte PHP-versie per server achter mijn website?\n2. Staat de update van 21 oktober 2026 voor PHP2Shell, CVE-2026-109618 en CVE-2026-109619, op elk van die servers? De reparatie is per reeks PHP 8.2.35, 8.3.36, 8.4.27 of 8.5.12, of een latere versie binnen dezelfde reeks.\n3. Zo nee, bevestig de toegepaste backport van de leverancier (een reparatie voor een oudere versie), of geef een datum voor een upgrade naar een ondersteunde reeks.\n\nGraag per server de versie en eventuele backport bevestigen. Alleen WordPress bijwerken lost dit niet op. Bedankt!","builder_steps":["Hostingpaneel (cPanel, DirectAdmin of Plesk): controleer de volledige PHP-versie per website. Bij alleen 8.3: vraag het volledige nummer, zoals 8.3.36.","Tijdelijk versiebestand: plaats alleen <?php echo PHP_VERSION; op de site, open het en verwijder het bestand direct. Dit toont de PHP-versie achter de site. php -v op de opdrachtregel kan een andere versie tonen. Een phpinfo()-pagina geeft meer prijs dan nodig is en mag nooit blijven staan.","Controleer de statuspagina of mail van de hoster over PHP2Shell, CVE-2026-109618 en CVE-2026-109619.","Debian of Ubuntu: controleer het changelog (de wijzigingenlijst) of de melding over de reparatie van het exacte pakket. Laat de leverancier bevestigen of beide CVE’s daarin zijn opgelost."],"signals":{"custom":"X-Powered-By zonder herkenbare PHP-vermelding; zwak signaal, kan ook een andere techniek zijn.","cookie":"Cookienaam PHPSESSID gevonden (waarde niet getoond).","link":"Link-header bevat rel=\"https://api.w.org/\".","cms_flag":"Zelf aangegeven: WordPress, Joomla of Drupal."}}</script>
+<script type="text/plain" id="bookmarklet-source">/* Alleen deze functie mag een netwerkverzoek doen. */
+(async function phpLekCheck() {
+  const data = {"schema":3,"verified":"24 oktober 2026","purpose":"Deze check helpt je de juiste vraag aan je hoster te stellen. Hij stelt niet vast of je website kwetsbaar is.","page_intro":"Deze check helpt je de juiste vraag aan je websitebouwer of hoster te stellen. Je websiteadres gaat nergens heen: alles gebeurt in je eigen browser.","button":"Check mijn PHP-versie","comparison":"Vergelijk per reeks: 8.2.34 kan kwetsbaar zijn, 8.2.35 is de reparatie. Andere reeksen: 8.3.36, 8.4.27 en 8.5.12.","patches":{"8.2":35,"8.3":36,"8.4":27,"8.5":12},"patterns":{"version":"\\bPHP/(\\d+)\\.(\\d+)\\.(\\d+)([a-zA-Z0-9.+~_-]*)","php":"\\bPHP\\b","cms":"\\b(?:WordPress|Joomla|Drupal)\\b","path":"\\.php(?=[/?#]|$)|/(?:wp-content|wp-includes|wp-json)/","cookie":"(?:^|;)\\s*PHPSESSID\\s*=","link":"(?:^|;)\\s*rel\\s*=\\s*[\"']https://api\\.w\\.org/[\"']","prerelease":"(?:alpha|beta|rc|dev)"},"rules":[{"when":{"max_branch":[7,3],"suffix":true},"result":"unsupported_suffix"},{"when":{"max_branch":[7,3]},"result":"unsupported"},{"when":{"max_branch":[8,1],"suffix":true},"result":"distribution"},{"when":{"max_branch":[8,1]},"result":"legacy"},{"when":{"known_branch":false},"result":"unrecognized"},{"when":{"prerelease":true},"result":"unrecognized"},{"when":{"fixed":true},"result":"updated"},{"when":{"suffix":true},"result":"distribution"},{"when":{},"result":"outdated"}],"results":{"outdated":{"code":"verouderd","title":"Een oud PHP-nummer is zichtbaar.","assessment":"kan kwetsbaar zijn","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Vraag je hoster om bevestiging.","priority":3},"distribution":{"code":"distributie","title":"Verouderde PHP met distributie-achtervoegsel","assessment":"onbekend","explanation":"De leverancier kan de reparatie al hebben toegepast op deze oudere versie. Vraag dit na.","priority":4},"legacy":{"code":"oud","title":"PHP 7.4 tot en met 8.1","assessment":"kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. Geen gewone PHP-update voor deze versie. PHP biedt broncode-backports voor 7.4, 8.0 en 8.1. Vraag je hoster om bevestiging van de toegepaste backport, of anders om een upgrade.","priority":2},"updated":{"code":"bijgewerkt","title":"Het versienummer lijkt bijgewerkt.","assessment":"lijkt bijgewerkt volgens het versienummer","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of een andere server komen. Achter één site kunnen meer servers staan. Vraag bevestiging per server.","priority":6},"hidden":{"code":"verborgen","title":"PHP aanwezig, versie verborgen","assessment":"onbekend","explanation":"Een signaal is geen bewijs dat PHP hier draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.","priority":7},"none":{"code":"geen_php","title":"Geen PHP gezien","assessment":"onbekend","explanation":"Geen aanwijzing gevonden. Dat bewijst niet dat er geen PHP draait. Geen conclusie mogelijk. Stuur het bericht naar je hoster.","priority":8},"unsupported":{"code":"oud","title":"Een PHP-versie zonder reparatie van PHP is zichtbaar","assessment":"kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.","priority":0},"unsupported_suffix":{"code":"oud","title":"Een PHP-versie zonder reparatie van PHP is zichtbaar","assessment":"kan kwetsbaar zijn, vraag de leverancier om bevestiging","explanation":"De header kan van een CDN (een tussendienst), cache (een opgeslagen antwoord) of tussenserver komen. De geraadpleegde PHP-bronnen noemen voor 7.3 en ouder geen backport. Een leverancier kan wel een reparatie hebben. Vraag om bevestiging of een upgrade naar een ondersteunde reeks.","priority":1},"unrecognized":{"code":null,"title":"Controle niet afgerond","assessment":"onbekend","explanation":"Deze PHP-reeks of testversie valt buiten de gecontroleerde versietabel. Vraag het na bij je hoster.","priority":5}},"message":"Hallo,\n\nIk heb voor mijn website {url} naar zichtbare PHP-informatie gekeken. Gevonden PHP-versie: {version}. Deze check stelt niet vast of mijn website kwetsbaar is.\n\nWillen jullie drie dingen bevestigen?\n1. Wat is de exacte PHP-versie per server achter mijn website?\n2. Staat de update van 21 oktober 2026 voor PHP2Shell, CVE-2026-109618 en CVE-2026-109619, op elk van die servers? De reparatie is per reeks PHP 8.2.35, 8.3.36, 8.4.27 of 8.5.12, of een latere versie binnen dezelfde reeks.\n3. Zo nee, bevestig de toegepaste backport van de leverancier (een reparatie voor een oudere versie), of geef een datum voor een upgrade naar een ondersteunde reeks.\n\nGraag per server de versie en eventuele backport bevestigen. Alleen WordPress bijwerken lost dit niet op. Bedankt!","builder_steps":["Hostingpaneel (cPanel, DirectAdmin of Plesk): controleer de volledige PHP-versie per website. Bij alleen 8.3: vraag het volledige nummer, zoals 8.3.36.","Tijdelijk versiebestand: plaats alleen <?php echo PHP_VERSION; op de site, open het en verwijder het bestand direct. Dit toont de PHP-versie achter de site. php -v op de opdrachtregel kan een andere versie tonen. Een phpinfo()-pagina geeft meer prijs dan nodig is en mag nooit blijven staan.","Controleer de statuspagina of mail van de hoster over PHP2Shell, CVE-2026-109618 en CVE-2026-109619.","Debian of Ubuntu: controleer het changelog (de wijzigingenlijst) of de melding over de reparatie van het exacte pakket. Laat de leverancier bevestigen of beide CVE’s daarin zijn opgelost."],"signals":{"custom":"X-Powered-By zonder herkenbare PHP-vermelding; zwak signaal, kan ook een andere techniek zijn.","cookie":"Cookienaam PHPSESSID gevonden (waarde niet getoond).","link":"Link-header bevat rel=\"https://api.w.org/\".","cms_flag":"Zelf aangegeven: WordPress, Joomla of Drupal."}};
+  /* De gegevens en de volgorde van de regels komen uitsluitend uit rules.json. */
+function createChecker(data) {
+  const pattern = (name, flags = 'i') => new RegExp(data.patterns[name], flags);
+  const compare = (a, b) => {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) - (b[i] || 0);
+    }
+    return 0;
+  };
+
+  function collectDOM(doc) {
+    const generators = [], attributes = [];
+    for (const node of doc.querySelectorAll('meta[name]')) {
+      if ((node.getAttribute('name') || '').toLowerCase() === 'generator') {
+        generators.push(node.getAttribute('content') || '');
+      }
+    }
+    for (const node of doc.querySelectorAll('[src], [action], [href]')) {
+      for (const name of ['src', 'action', 'href']) {
+        if (node.hasAttribute(name)) attributes.push({name, value: node.getAttribute(name) || ''});
+      }
+    }
+    return {generators, attributes};
+  }
+
+  function chooseVersion(number, suffix) {
+    const branch = number.slice(0, 2), key = branch.join('.');
+    const facts = {
+      suffix: Boolean(suffix), known_branch: Object.hasOwn(data.patches, key),
+      prerelease: pattern('prerelease').test(suffix),
+      fixed: Object.hasOwn(data.patches, key) && number[2] >= data.patches[key]
+    };
+    for (const rule of data.rules) {
+      if (Object.entries(rule.when).every(([name, value]) =>
+        name === 'max_branch' ? compare(branch, value) <= 0 : facts[name] === value)) {
+        return {key: rule.result, number, version: number.join('.') + suffix};
+      }
+    }
+    throw new Error('Geen beoordelingsregel gevonden.');
+  }
+
+  function makeMessage(url, version) {
+    const fields = {url: url || '(vul je websiteadres in)', version: version || 'niet zichtbaar'};
+    const message = data.message.replace(/\{(url|version)\}/g, (_, key) => fields[key]);
+    return message + '\n\nVoor je websitebouwer: zo weet je het zeker\n' +
+      data.builder_steps.map((step, index) => `${index + 1}. ${step}`).join('\n');
+  }
+
+  function evaluate(input = {}) {
+    const headers = {};
+    for (const [name, value] of Object.entries(input.headers || {})) {
+      const key = name.toLowerCase();
+      headers[key] = (headers[key] || []).concat(Array.isArray(value) ? value : [String(value)]);
+    }
+    const powered = (headers['x-powered-by'] || []).join(' | ');
+    const server = (headers.server || []).join(' | ');
+    const html = input.htmlRecords || {generators: [], attributes: []};
+    const signals = new Set();
+    for (const [name, value] of [['X-Powered-By', powered], ['Server', server]]) {
+      if (pattern('php').test(value)) signals.add(`Header ${name} noemt PHP.`);
+    }
+    if (powered.trim() && !pattern('php').test(powered)) signals.add(data.signals.custom);
+    for (const value of html.generators) {
+      const cms = value.match(pattern('cms'));
+      if (cms) signals.add(`HTML-metatag generator noemt ${cms[0]}.`);
+    }
+    for (const {name, value} of html.attributes) {
+      const match = value.match(pattern('path'));
+      if (match) signals.add(`HTML-attribuut ${name} bevat ${match[0]}.`);
+    }
+    const cookies = (headers['set-cookie'] || []).map(value => value.split(';')[0]);
+    if (cookies.concat(input.cookie || '').some(value => pattern('cookie').test(value))) signals.add(data.signals.cookie);
+    if (pattern('link').test((headers.link || []).join(' '))) signals.add(data.signals.link);
+    if (input.cms) signals.add(data.signals.cms_flag);
+    const candidates = Array.from((powered + ' ' + server).matchAll(pattern('version', 'gi')),
+      match => chooseVersion(match.slice(1, 4).map(Number), match[4]));
+    candidates.sort((a, b) => data.results[a.key].priority - data.results[b.key].priority || compare(a.number, b.number));
+    const chosen = candidates[0];
+    const definition = data.results[chosen ? chosen.key : signals.size ? 'hidden' : 'none'];
+    const version = chosen ? chosen.version : null;
+    return {
+      doel: data.purpose, url: input.url || '', uitkomst: definition.code,
+      beoordeling: definition.assessment, php_versie: version, vergelijking: data.comparison,
+      titel: definition.title, toelichting: definition.explanation,
+      aanwijzingen: {'X-Powered-By': powered, Server: server, generator: html.generators, signalen: [...signals].sort()},
+      bericht_hoster: makeMessage(input.url, version)
+    };
+  }
+  return {evaluate, collectDOM, makeMessage, data};
+}
+  function resultView(doc, result) {
+  const make = (tag, text, className) => {
+    const node = doc.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  };
+  const section = make('section', undefined, 'result-view');
+  section.append(make('p', result.doel, 'small'));
+  section.append(make('h3', result.titel));
+  section.append(make('p', `Beoordeling: ${result.beoordeling}`, 'assessment'));
+  section.append(make('p', result.toelichting));
+  section.append(make('p', `PHP-versie: ${result.php_versie || 'niet zichtbaar'}.`));
+  section.append(make('p', result.vergelijking, 'small'));
+  const signals = result.aanwijzingen?.signalen || [];
+  section.append(make('p', 'Gevonden signalen: ' + (signals.join(' ') || 'geen.'), 'small'));
+  const label = make('label', 'Bericht voor je websitebouwer of hoster');
+  const message = make('textarea');
+  message.value = result.bericht_hoster;
+  message.readOnly = true;
+  message.rows = 12;
+  message.setAttribute('aria-label', 'Bericht voor je websitebouwer of hoster');
+  label.append(message);
+  section.append(label);
+  const button = make('button', 'Kopieer bericht', 'primary');
+  button.type = 'button';
+  const status = make('p', '', 'small');
+  status.setAttribute('role', 'status');
+  button.addEventListener('click', async () => {
+    const copied = await copyText(doc, message);
+    status.textContent = copied ? 'Bericht gekopieerd. Je kunt het nu plakken in een mail.' :
+      'Kopiëren is hier geblokkeerd. De tekst is geselecteerd. Kopieer zelf met Ctrl+C of Cmd+C, of houd de tekst ingedrukt.';
+  });
+  section.append(button, status);
+  return section;
+}
+
+async function copyText(doc, field) {
+  try {
+    const clipboard = doc.defaultView?.navigator?.clipboard;
+    if (clipboard && typeof clipboard.writeText === 'function') {
+      await clipboard.writeText(field.value);
+      return true;
+    }
+  } catch (_) { /* De handmatige route hieronder blijft beschikbaar. */ }
+  field.focus();
+  field.select();
+  try { return Boolean(doc.execCommand && doc.execCommand('copy')); }
+  catch (_) { return false; }
+}
+  const checker = createChecker(data);
+  const previousFocus = document.activeElement;
+  const records = checker.collectDOM(document);
+  let cookies = '';
+  try { cookies = document.cookie; } catch (_) { /* Niet alle cookies zijn leesbaar. */ }
+  const address = location.href;
+  const host = document.createElement('div');
+  host.setAttribute('data-php-lek-check-overlay', '');
+  const root = host.attachShadow({mode: 'open'});
+  const style = document.createElement('style');
+  style.textContent = `
+    :host { all: initial; }
+    * { box-sizing: border-box; }
+    dialog { width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 32px);
+      overflow: auto; padding: 24px; border: 2px solid #244b40; border-radius: 16px;
+      background: #fffdf7; color: #183b32; font: 17px/1.55 system-ui, sans-serif; }
+    dialog::backdrop { background: rgb(12 28 24 / .7); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    h2, h3 { line-height: 1.25; margin: 12px 0; }
+    p { margin: 12px 0; }
+    .small { font-size: 14px; color: #43594f; }
+    .assessment { font-weight: 700; }
+    button { min-height: 44px; padding: 10px 16px; border: 1px solid #244b40; border-radius: 8px;
+      background: #fffdf7; color: #183b32; font: inherit; cursor: pointer; }
+    .primary { background: #183b32; color: white; }
+    textarea { display: block; width: 100%; margin: 8px 0 16px; padding: 12px; resize: vertical;
+      border: 1px solid #667c71; border-radius: 8px; background: white; color: #183b32; font: 15px/1.5 system-ui, sans-serif; }
+    :focus-visible { outline: 3px solid #98631d; outline-offset: 3px; }
+  `;
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('aria-labelledby', 'php-check-title');
+  const header = document.createElement('header');
+  const title = document.createElement('h2');
+  title.id = 'php-check-title';
+  title.textContent = 'Jouw PHP-check';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = 'Sluiten';
+  close.addEventListener('click', () => dialog.close());
+  header.append(title, close);
+  const content = document.createElement('div');
+  content.textContent = 'De knop leest één antwoord van deze pagina. Even wachten…';
+  dialog.append(header, content);
+  root.append(style, dialog);
+  (document.body || document.documentElement).append(host);
+  dialog.addEventListener('close', () => {
+    host.remove();
+    if (previousFocus?.isConnected) previousFocus.focus({preventScroll: true});
+  });
+  dialog.showModal();
+  close.focus();
+  let result;
+  try {
+    if (!/^https?:$/.test(location.protocol)) throw new Error('Open eerst je eigen website. Gebruik anders route B op de checkpagina.');
+    const response = await fetch(location.href, {credentials: "same-origin", cache: "no-store", redirect: "manual"});
+    if (response.type === 'opaqueredirect' || response.status >= 300 && response.status < 400) {
+      throw new Error('Deze pagina verwijst door. De knop volgt die verwijzing niet. Open zelf het uiteindelijke adres of gebruik route B.');
+    }
+    const headers = {};
+    for (const name of ['X-Powered-By', 'Server', 'Link']) headers[name] = response.headers.get(name) || '';
+    result = checker.evaluate({headers, htmlRecords: records, cookie: cookies, url: address});
+    if (response.status >= 400 && result.uitkomst === 'geen_php') {
+      throw new Error('De website gaf een foutantwoord. Gebruik route B of stuur het bericht naar je hoster.');
+    }
+  } catch (error) {
+    result = checker.evaluate({htmlRecords: records, cookie: cookies, url: address});
+    result.uitkomst = null;
+    result.titel = 'Controle niet afgerond';
+    result.beoordeling = 'onbekend';
+    result.toelichting = error instanceof TypeError ?
+      'De browser kon het antwoord niet lezen. Een instelling van de site of een netwerkfout kan de knop blokkeren. Gebruik route B of stuur het bericht naar je hoster.' : error.message;
+  }
+  if (host.isConnected) content.replaceChildren(resultView(document, result));
+})();</script>
+<script id="page-script">
+/* De gegevens en de volgorde van de regels komen uitsluitend uit rules.json. */
+function createChecker(data) {
+  const pattern = (name, flags = 'i') => new RegExp(data.patterns[name], flags);
+  const compare = (a, b) => {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) - (b[i] || 0);
+    }
+    return 0;
+  };
+
+  function collectDOM(doc) {
+    const generators = [], attributes = [];
+    for (const node of doc.querySelectorAll('meta[name]')) {
+      if ((node.getAttribute('name') || '').toLowerCase() === 'generator') {
+        generators.push(node.getAttribute('content') || '');
+      }
+    }
+    for (const node of doc.querySelectorAll('[src], [action], [href]')) {
+      for (const name of ['src', 'action', 'href']) {
+        if (node.hasAttribute(name)) attributes.push({name, value: node.getAttribute(name) || ''});
+      }
+    }
+    return {generators, attributes};
+  }
+
+  function chooseVersion(number, suffix) {
+    const branch = number.slice(0, 2), key = branch.join('.');
+    const facts = {
+      suffix: Boolean(suffix), known_branch: Object.hasOwn(data.patches, key),
+      prerelease: pattern('prerelease').test(suffix),
+      fixed: Object.hasOwn(data.patches, key) && number[2] >= data.patches[key]
+    };
+    for (const rule of data.rules) {
+      if (Object.entries(rule.when).every(([name, value]) =>
+        name === 'max_branch' ? compare(branch, value) <= 0 : facts[name] === value)) {
+        return {key: rule.result, number, version: number.join('.') + suffix};
+      }
+    }
+    throw new Error('Geen beoordelingsregel gevonden.');
+  }
+
+  function makeMessage(url, version) {
+    const fields = {url: url || '(vul je websiteadres in)', version: version || 'niet zichtbaar'};
+    const message = data.message.replace(/\{(url|version)\}/g, (_, key) => fields[key]);
+    return message + '\n\nVoor je websitebouwer: zo weet je het zeker\n' +
+      data.builder_steps.map((step, index) => `${index + 1}. ${step}`).join('\n');
+  }
+
+  function evaluate(input = {}) {
+    const headers = {};
+    for (const [name, value] of Object.entries(input.headers || {})) {
+      const key = name.toLowerCase();
+      headers[key] = (headers[key] || []).concat(Array.isArray(value) ? value : [String(value)]);
+    }
+    const powered = (headers['x-powered-by'] || []).join(' | ');
+    const server = (headers.server || []).join(' | ');
+    const html = input.htmlRecords || {generators: [], attributes: []};
+    const signals = new Set();
+    for (const [name, value] of [['X-Powered-By', powered], ['Server', server]]) {
+      if (pattern('php').test(value)) signals.add(`Header ${name} noemt PHP.`);
+    }
+    if (powered.trim() && !pattern('php').test(powered)) signals.add(data.signals.custom);
+    for (const value of html.generators) {
+      const cms = value.match(pattern('cms'));
+      if (cms) signals.add(`HTML-metatag generator noemt ${cms[0]}.`);
+    }
+    for (const {name, value} of html.attributes) {
+      const match = value.match(pattern('path'));
+      if (match) signals.add(`HTML-attribuut ${name} bevat ${match[0]}.`);
+    }
+    const cookies = (headers['set-cookie'] || []).map(value => value.split(';')[0]);
+    if (cookies.concat(input.cookie || '').some(value => pattern('cookie').test(value))) signals.add(data.signals.cookie);
+    if (pattern('link').test((headers.link || []).join(' '))) signals.add(data.signals.link);
+    if (input.cms) signals.add(data.signals.cms_flag);
+    const candidates = Array.from((powered + ' ' + server).matchAll(pattern('version', 'gi')),
+      match => chooseVersion(match.slice(1, 4).map(Number), match[4]));
+    candidates.sort((a, b) => data.results[a.key].priority - data.results[b.key].priority || compare(a.number, b.number));
+    const chosen = candidates[0];
+    const definition = data.results[chosen ? chosen.key : signals.size ? 'hidden' : 'none'];
+    const version = chosen ? chosen.version : null;
+    return {
+      doel: data.purpose, url: input.url || '', uitkomst: definition.code,
+      beoordeling: definition.assessment, php_versie: version, vergelijking: data.comparison,
+      titel: definition.title, toelichting: definition.explanation,
+      aanwijzingen: {'X-Powered-By': powered, Server: server, generator: html.generators, signalen: [...signals].sort()},
+      bericht_hoster: makeMessage(input.url, version)
+    };
+  }
+  return {evaluate, collectDOM, makeMessage, data};
+}
+function resultView(doc, result) {
+  const make = (tag, text, className) => {
+    const node = doc.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  };
+  const section = make('section', undefined, 'result-view');
+  section.append(make('p', result.doel, 'small'));
+  section.append(make('h3', result.titel));
+  section.append(make('p', `Beoordeling: ${result.beoordeling}`, 'assessment'));
+  section.append(make('p', result.toelichting));
+  section.append(make('p', `PHP-versie: ${result.php_versie || 'niet zichtbaar'}.`));
+  section.append(make('p', result.vergelijking, 'small'));
+  const signals = result.aanwijzingen?.signalen || [];
+  section.append(make('p', 'Gevonden signalen: ' + (signals.join(' ') || 'geen.'), 'small'));
+  const label = make('label', 'Bericht voor je websitebouwer of hoster');
+  const message = make('textarea');
+  message.value = result.bericht_hoster;
+  message.readOnly = true;
+  message.rows = 12;
+  message.setAttribute('aria-label', 'Bericht voor je websitebouwer of hoster');
+  label.append(message);
+  section.append(label);
+  const button = make('button', 'Kopieer bericht', 'primary');
+  button.type = 'button';
+  const status = make('p', '', 'small');
+  status.setAttribute('role', 'status');
+  button.addEventListener('click', async () => {
+    const copied = await copyText(doc, message);
+    status.textContent = copied ? 'Bericht gekopieerd. Je kunt het nu plakken in een mail.' :
+      'Kopiëren is hier geblokkeerd. De tekst is geselecteerd. Kopieer zelf met Ctrl+C of Cmd+C, of houd de tekst ingedrukt.';
+  });
+  section.append(button, status);
+  return section;
+}
+
+async function copyText(doc, field) {
+  try {
+    const clipboard = doc.defaultView?.navigator?.clipboard;
+    if (clipboard && typeof clipboard.writeText === 'function') {
+      await clipboard.writeText(field.value);
+      return true;
+    }
+  } catch (_) { /* De handmatige route hieronder blijft beschikbaar. */ }
+  field.focus();
+  field.select();
+  try { return Boolean(doc.execCommand && doc.execCommand('copy')); }
+  catch (_) { return false; }
+}
+(function startPage() {
+  const checker = createChecker(JSON.parse(document.getElementById('rules-data').textContent));
+  const source = document.getElementById('bookmarklet-source').textContent.trim();
+  const bookmark = document.getElementById('bookmarklet');
+  bookmark.href = 'javascript:' + encodeURIComponent(source);
+  const bookmarkCode = document.getElementById('bookmark-url');
+  bookmarkCode.value = bookmark.href;
+  document.getElementById('readable-code').textContent = source;
+  bookmark.addEventListener('click', event => {
+    event.preventDefault();
+    const details = document.getElementById('bookmark-code');
+    details.open = true;
+    details.querySelector('summary').focus();
+  });
+  document.getElementById('copy-bookmark').addEventListener('click', async () => {
+    const copied = await copyText(document, bookmarkCode);
+    document.getElementById('bookmark-status').textContent = copied ?
+      'Bladwijzercode gekopieerd. Plak deze als adres van je nieuwe bladwijzer.' :
+      'De code is geselecteerd. Kopieer zelf met Ctrl+C of Cmd+C.';
+  });
+  document.getElementById('manual-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const result = checker.evaluate({
+      headers: {'X-Powered-By': document.getElementById('powered-by').value.trim()},
+      cms: document.getElementById('cms').checked,
+      url: document.getElementById('site-address').value.trim()
+    });
+    document.getElementById('result-body').replaceChildren(resultView(document, result));
+    const container = document.getElementById('result');
+    container.hidden = false;
+    document.getElementById('manual-status').textContent = 'Je uitslag en bericht staan hieronder.';
+    container.focus({preventScroll: true});
+    container.scrollIntoView({block: 'start'});
+  });
+})();
+</script>
+</body>
+</html>

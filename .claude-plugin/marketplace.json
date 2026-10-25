@@ -21,6 +21,12 @@
       "source": "./context-meter",
       "version": "1.0.0",
       "description": "One line above the prompt that shows how full the context is, in the bands of the context-rotation guard: green, yellow and red."
+    },
+    {
+      "name": "php-lek-check",
+      "source": "./php-lek-check",
+      "version": "1.0.0",
+      "description": "Dutch check for website owners on PHP2Shell (CVE-2026-109618, CVE-2026-109619): reads the PHP signals your own site shows and writes a message for your host. Does not establish whether a site is vulnerable."
     }
   ]
 }
