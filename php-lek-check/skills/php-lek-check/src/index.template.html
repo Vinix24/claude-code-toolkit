@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>PHP-lek-check · Een duidelijke vraag aan je hoster</title>
+  <style>
+    :root { --ink:#183b32; --muted:#4c6156; --paper:#f8f6ef; --white:#fffefa; --line:#b9c8bd; --leaf:#e3eddf; --gold:#f4e6c9; --focus:#916020; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:auto; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--ink); text-underline-offset:4px; overflow-wrap:anywhere; }
+    button, input, textarea { font:inherit; }
+    button, .button { min-height:48px; padding:12px 22px; border:1.5px solid var(--ink); border-radius:8px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; background:var(--white); color:var(--ink); font-weight:650; }
+    button:hover,.button:hover { background:var(--leaf); }
+    .primary { background:var(--ink); color:var(--white); }
+    .primary:hover { background:#285548; }
+    :focus-visible { outline:3px solid var(--focus); outline-offset:4px; }
+    .skip { position:absolute; top:-100px; left:12px; padding:12px; background:white; z-index:2; }
+    .skip:focus { top:12px; }
+    .wrap { max-width:1100px; margin:0 auto; padding:0 28px; }
+    .masthead { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:26px 0 18px; border-bottom:1px solid var(--line); font-size:14px; }
+    .brand { font-weight:800; letter-spacing:.02em; }
+    .brand span { display:inline-block; background:var(--ink); color:var(--paper); padding:2px 8px; margin-right:10px; border-radius:5px; font-family:Georgia,serif; font-style:italic; }
+    .small,.eyebrow { font-size:14px; color:var(--muted); }
+    .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-weight:750; }
+    .intro { max-width:850px; padding:22px 0 0; margin:0; font-size:16px; }
+    .hero { padding:42px 0 40px; max-width:850px; }
+    h1 { font:normal clamp(36px,5.7vw,64px)/1.08 Georgia,"Times New Roman",serif; letter-spacing:-.03em; margin:0 0 24px; }
+    h1 em { color:#42664e; font-weight:normal; }
+    h2 { font:normal clamp(26px,3vw,34px)/1.2 Georgia,"Times New Roman",serif; margin:8px 0 18px; }
+    h3 { font-size:21px; line-height:1.3; margin:8px 0 12px; }
+    p { margin:0 0 16px; }
+    .hero p { max-width:640px; font-size:19px; }
+    .panel { background:var(--white); padding:32px; border:1px solid var(--line); border-radius:16px; margin-bottom:24px; }
+    .route-a { background:var(--leaf); border-color:#b4c8af; }
+    .route-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+    .tag { flex:none; border:1px solid #647e60; border-radius:100px; padding:4px 12px; font-size:13px; font-weight:700; }
+    .steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; padding:0; margin:28px 0; list-style:none; }
+    .step-number { display:inline-grid; place-items:center; width:28px; height:28px; margin-right:8px; background:var(--ink); border-radius:50%; color:white; font:700 14px system-ui,sans-serif; }
+    .steps h3 { font-size:18px; }
+    .steps p { font-size:15px; margin-top:12px; }
+    .steps svg { width:100%; max-width:260px; height:124px; display:block; margin:0 auto 18px; color:var(--ink); }
+    .bookmark-area { padding:24px; border:1px dashed #718b69; border-radius:12px; background:rgb(255 254 250 / .65); text-align:center; }
+    .bookmark-area .small { max-width:650px; margin:12px auto 0; }
+    #bookmarklet { cursor:grab; padding:15px 28px; }
+    .route-link { display:inline-block; margin:16px 0 0; font-weight:600; }
+    details { border-top:1px solid var(--line); padding:14px 0; }
+    details:last-child { padding-bottom:0; }
+    summary { cursor:pointer; font-weight:650; padding:5px 0; }
+    details p,details ol { margin-top:12px; }
+    pre { max-height:350px; overflow:auto; padding:18px; background:#f0f2eb; border:1px solid var(--line); border-radius:8px; font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; }
+    code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.88em; overflow-wrap:anywhere; }
+    label { display:block; font-weight:650; margin:20px 0 6px; }
+    input[type=text],textarea { width:100%; padding:12px 14px; border:1.5px solid #758879; border-radius:8px; color:var(--ink); background:#fff; min-height:48px; }
+    textarea { resize:vertical; }
+    label textarea { display:block; margin-top:10px; font-weight:400; font-size:15px; line-height:1.6; }
+    .check-row { display:flex; gap:12px; align-items:flex-start; margin:20px 0; font-weight:500; cursor:pointer; }
+    input[type=checkbox] { width:22px; height:22px; flex:none; margin-top:4px; accent-color:var(--ink); }
+    .two-col { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:32px; }
+    .form-area { border-left:1px solid var(--line); padding-left:32px; }
+    .form-area label:first-child { margin-top:0; }
+    #manual-status { margin-top:10px; }
+    .notice { background:var(--gold); padding:16px 20px; border-left:3px solid #916020; font-size:15px; }
+    .result-panel { border:2px solid var(--ink); }
+    .assessment { padding:12px 16px; background:var(--gold); font-weight:700; border-radius:8px; }
+    .result-view textarea { margin-bottom:16px; }
+    .body-section { padding:28px 0; border-top:1px solid var(--line); }
+    .body-section > p { max-width:800px; }
+    .builder-list { padding-left:26px; }
+    .builder-list li { margin:0 0 16px; padding-left:8px; }
+    .outcomes { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .outcome { padding:20px; border:1px solid var(--line); border-radius:10px; background:var(--white); }
+    .outcome h3 { font-size:18px; }
+    .outcome p { font-size:15px; }
+    .sources { padding-left:22px; font-size:14px; }
+    .sources li { margin-bottom:8px; }
+    footer { margin:20px 0 40px; padding-top:20px; border-top:1px solid var(--line); }
+    [hidden] { display:none !important; }
+    @media(max-width:760px) { .wrap { padding:0 18px; } .hero { padding:32px 0; } .panel { padding:22px; } .steps { grid-template-columns:1fr; gap:24px; } .steps svg { max-width:250px; margin-left:0; } .two-col { grid-template-columns:1fr; gap:24px; } .form-area { border-left:0; border-top:1px solid var(--line); padding:24px 0 0; } .outcomes { grid-template-columns:1fr; } .tag { display:none; } .masthead { align-items:flex-start; } }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+    @media print { button,.bookmark-area,#bookmark-code,form { display:none; } body { background:white; } .panel { break-inside:avoid; } }
+  </style>
+</head>
+<body>
+<a class="skip" href="#route-b">Naar de plakroute</a>
+<div class="wrap">
+  <header>
+    <div class="masthead"><div class="brand"><span>php</span> PHP-lek-check</div><span class="small">Op je eigen computer. Zonder account.</span></div>
+    <p class="intro">__PAGE_INTRO__</p>
+    <div class="hero">
+      <h1>Een helder antwoord<br><em>begint bij je hoster.</em></h1>
+      <p>Lees wat je website laat zien over PHP. En maak meteen een bericht voor de mensen die je website beheren.</p>
+      <p class="small">PHP is software waarop veel websites draaien. Deze check stelt niet vast of je website kwetsbaar is.</p>
+    </div>
+  </header>
+  <main>
+    <section class="panel route-a" id="route-a" aria-labelledby="route-a-title">
+      <div class="route-heading"><div><p class="eyebrow">Route A · op je computer</p><h2 id="route-a-title">Neem de check mee naar je website</h2></div><span class="tag">Begin hier</span></div>
+      <p>Maak één keer een bladwijzer. Je gebruikt de knop daarna op je eigen website.</p>
+      <ol class="steps">
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245M18 20h4m6 0h4m6 0h4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="17" y="42" width="109" height="19" rx="4" fill="#e3eddf" stroke="currentColor"/><path d="M161 96q8-32-22-40m0 0 3 14m-3-14 15 1" fill="none" stroke="currentColor" stroke-width="2"/><rect x="151" y="91" width="81" height="25" rx="5" fill="#183b32"/><text x="164" y="108" font-size="13" fill="white" font-family="system-ui,sans-serif">PHP-check</text></svg>
+          <h3><span class="step-number">1</span>Sleep de knop</h3><p>Sleep de groene knop hieronder naar je bladwijzerbalk, de rij favoriete websites bovenaan je browser.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245" stroke="currentColor" stroke-width="2"/><rect x="18" y="16" width="216" height="12" rx="4" fill="#e3eddf"/><text x="25" y="26" font-size="10" font-family="system-ui,sans-serif" fill="currentColor">jouwsite.nl</text><rect x="22" y="49" width="63" height="42" rx="3" fill="#e3eddf"/><path d="M100 53h111m-111 15h91m-91 15h105" stroke="currentColor" stroke-width="4"/></svg>
+          <h3><span class="step-number">2</span>Open je eigen website</h3><p>Ga naar de gewone startpagina. Je hoeft niets te installeren of op je website te veranderen.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 260 124" aria-hidden="true"><rect x="5" y="8" width="245" height="100" rx="9" fill="#fffefa" stroke="currentColor" stroke-width="2"/><path d="M5 34h245" stroke="currentColor" stroke-width="2"/><rect x="18" y="17" width="90" height="12" rx="3" fill="#183b32"/><rect x="39" y="45" width="173" height="70" rx="6" fill="#e3eddf" stroke="currentColor" stroke-width="2"/><path d="M54 60h115m-115 12h133m-133 12h100" stroke="currentColor" stroke-width="3"/><rect x="54" y="94" width="85" height="11" rx="3" fill="#183b32"/></svg>
+          <h3><span class="step-number">3</span>Klik op de bladwijzer</h3><p>Je krijgt de uitslag in een venster op je site. Kopieer het bericht en stuur het naar je bouwer of hoster.</p>
+        </li>
+      </ol>
+      <div class="bookmark-area"><a id="bookmarklet" class="button primary" href="#bookmark-code" draggable="true">__BUTTON__</a><p class="small">Sleep deze knop naar je bladwijzerbalk. Een gewone klik hier toont de code en uitleg.</p></div>
+      <a class="route-link" href="#route-b">Werkt de knop niet? Gebruik route B ↓</a>
+      <p class="small">De knop kan worden geblokkeerd door instellingen van de site. Op een telefoon of in een browser zonder bladwijzerbalk is route B meestal handiger. Niet alle cookies zijn leesbaar.</p>
+      <details><summary>Ik zie geen bladwijzerbalk</summary><p>In Chrome, Edge en Firefox op Windows: druk Ctrl+Shift+B. Op een Mac: Cmd+Shift+B in Chrome of Edge. In Safari kies je Weergave → Toon favorietenbalk. In Firefox kun je via Beeld → Werkbalken de bladwijzerbalk aanzetten.</p></details>
+      <details id="bookmark-code"><summary>Met het toetsenbord gebruiken of de code lezen</summary><p>Maak een nieuwe bladwijzer. Geef die de naam <strong>__BUTTON__</strong>. Vervang het adres door de code uit dit vak. Gebruik de bladwijzer alleen op je eigen site.</p><label for="bookmark-url">Adres voor de bladwijzer</label><textarea id="bookmark-url" rows="3" readonly spellcheck="false"></textarea><button id="copy-bookmark" type="button">Kopieer bladwijzercode</button><p id="bookmark-status" class="small" role="status"></p><p>Dit is dezelfde code, leesbaar opgemaakt:</p><pre id="readable-code" tabindex="0"></pre></details>
+    </section>
+
+    <section class="panel" id="route-b" aria-labelledby="route-b-title">
+      <p class="eyebrow">Route B · ook op je telefoon</p><h2 id="route-b-title">Plak wat je website laat zien</h2>
+      <p>Geen werkende knop? Kopieer één waarde uit je browser, of vraag die aan je bouwer. Een leeg vak mag ook.</p>
+      <div class="two-col"><div>
+        <h3>Waar vind je die waarde?</h3>
+        <details><summary>Chrome</summary><p>Open je eigen website. Druk F12, of op een Mac Cmd+Option+I. Kies <strong>Network / Netwerk</strong>. Herlaad de pagina. Kies het verzoek naar je pagina (meestal het eerste, type document). Open <strong>Headers → Response Headers</strong> en zoek <code>X-Powered-By</code>. Kopieer alleen de waarde erachter.</p></details>
+        <details><summary>Microsoft Edge</summary><p>Open je eigen website. Druk F12 of Ctrl+Shift+I. Op een Mac: Cmd+Option+I. Kies <strong>Network / Netwerk</strong>, herlaad de pagina en klik op het verzoek naar de pagina. Kijk bij <strong>Headers → Response Headers</strong> naar <code>X-Powered-By</code>.</p></details>
+        <details><summary>Firefox</summary><p>Open je eigen website. Druk F12 en kies <strong>Netwerk</strong>. Je kunt ook Ctrl+Shift+E gebruiken, of Cmd+Option+E op een Mac. Herlaad de pagina. Klik op het verzoek naar je pagina. Zoek bij <strong>Headers → Response Headers / Antwoordheaders</strong> naar <code>X-Powered-By</code>.</p></details>
+        <details><summary>Safari op een Mac</summary><p>Kies eerst <strong>Safari → Instellingen → Geavanceerd</strong>. Zet <strong>Toon functies voor webontwikkelaars</strong> aan. Open je eigen site en kies <strong>Ontwikkel → Toon webinfo</strong>, of druk Cmd+Option+I. Kies <strong>Netwerk</strong>, herlaad de pagina en open het verzoek naar je pagina. Zoek in de antwoordheaders naar <code>X-Powered-By</code>.</p></details>
+        <p class="small">Op een telefoon is F12 meestal niet beschikbaar. Laat je bouwer de waarde sturen. Je kunt ook alleen het vinkje invullen of het vak leeg laten. Je krijgt dan een bericht waarmee je de PHP-versie kunt navragen.</p>
+      </div><form id="manual-form" class="form-area" autocomplete="off">
+        <label for="powered-by">Waarde van X-Powered-By</label><textarea id="powered-by" rows="2" placeholder="Bijvoorbeeld: PHP/8.3.20" spellcheck="false" aria-describedby="header-help"></textarea><p id="header-help" class="small">Niet gevonden? Laat dit vak leeg. Een WordPress-versie is geen PHP-versie.</p>
+        <label class="check-row"><input id="cms" type="checkbox"><span>Mijn site draait op WordPress, Joomla of Drupal</span></label>
+        <label for="site-address">Je websiteadres <span class="small">(niet verplicht)</span></label><input id="site-address" type="text" inputmode="url" placeholder="https://jouwsite.nl" autocomplete="off" spellcheck="false" aria-describedby="address-help"><p id="address-help" class="small">Alleen voor in het bericht. Dit adres wordt niet bezocht of verstuurd.</p>
+        <button class="primary" type="submit">Maak mijn bericht</button><p id="manual-status" class="small" role="status"></p>
+      </form></div>
+    </section>
+
+    <section class="panel result-panel" id="result" aria-labelledby="result-title" tabindex="-1" hidden><p class="eyebrow">Jouw volgende stap</p><h2 id="result-title">De uitslag en je bericht</h2><div id="result-body"></div></section>
+    <noscript><p class="notice">JavaScript staat uit. De lokale beoordeling en bladwijzer werken dan niet. Je kunt de uitleg hieronder gebruiken om de volledige PHP-versie en de update van 21 oktober 2026 bij je hoster na te vragen.</p></noscript>
+
+    <section class="body-section" aria-labelledby="privacy-title"><h2 id="privacy-title">Waarom je website nergens heen gaat</h2><p>Deze pagina verstuurt je ingevulde adres, headers en uitslag niet. Er zijn geen externe lettertypen, meetcodes of afbeeldingen. De pagina haalt niets op zodra zij is geopend.</p><p>De bladwijzer doet op je eigen site één verzoek naar de pagina die je al open hebt. De knop volgt geen doorverwijzingen en probeert geen andere adressen. Er gaat niets naar mij, een externe scanner of een database.</p><p>De check schrijft niets in de browseropslag en maakt zelf geen cookies. De bladwijzer gebruikt wel de bestaande cookies van je eigen site; die site kan bij het antwoord zelf een cookie meesturen. Het tijdelijke venster verdwijnt met <strong>Sluiten</strong>. Pas als je op <strong>Kopieer bericht</strong> klikt, zet je zelf tekst op je klembord.</p><h3>Je kunt het zelf nagaan</h3><ol><li>Open de broncode van deze pagina. Alle code staat in dit ene bestand.</li><li>Bewaar het HTML-bestand op je computer via het browsermenu. Open dat bestand en zet je internet uit.</li><li>Gebruik route B. De beoordeling en het bericht blijven werken. De code is openbaar te lezen.</li></ol><p class="small">Bronlinks onderaan worden alleen geopend als je er zelf op klikt. De bladwijzer gebruikt internet om je eigen site te bereiken. Route B doet dat niet.</p></section>
+
+    <section class="body-section" aria-labelledby="builder-title"><p class="eyebrow">Voor je websitebouwer</p><h2 id="builder-title">Zo weet je het zeker</h2><p>Headers zijn aanwijzingen. Laat de beheerder kijken naar de installatie die je website echt gebruikt. Deze stappen staan ook onder het bericht dat je kopieert.</p><ol class="builder-list">__BUILDER_STEPS__</ol><p class="small">Alleen de beheerder met toegang en toestemming voert deze stappen uit. Deze check plaatst zelf geen bestanden op je website.</p></section>
+
+    <section class="body-section" aria-labelledby="outcomes-title"><h2 id="outcomes-title">Wat betekenen de uitkomsten?</h2><p>Een verborgen versie of geen PHP-signaal komt vaak voor. Daaruit volgt geen conclusie over kwetsbaarheid. Stuur in beide gevallen het bericht naar je hoster.</p><div class="outcomes">__OUTCOMES__</div><p class="small">Een distributie-achtervoegsel, zoals <code>-1~deb12u1</code>, kan wijzen op een reparatie van de leverancier. Bij 7.3 en ouder blijft de vraag om bevestiging extra belangrijk. Een verklaring van de leverancier gaat verder dan een zichtbaar versienummer.</p></section>
+
+    <section class="body-section" id="sources" aria-labelledby="sources-title"><h2 id="sources-title">Bronnen en datum</h2><p>De versietabel is gecontroleerd op <strong>__DATE__</strong>. De pagina haalt geen nieuwe tabel op. Het gaat om PHP2Shell: CVE-2026-109618 en CVE-2026-109619.</p><ul class="sources"><li><a href="https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w" rel="noreferrer">PHP-advisory CVE-2026-109618</a></li><li><a href="https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp" rel="noreferrer">PHP-advisory CVE-2026-109619</a></li><li><a href="https://www.php.net/archive/2026.php" rel="noreferrer">PHP-aankondiging van 21 oktober 2026 en broncode-backports</a></li><li><a href="https://developer.chrome.com/docs/devtools/network/reference" rel="noreferrer">Chrome: antwoordheaders bekijken</a></li><li><a href="https://learn.microsoft.com/en-us/microsoft-edge/devtools/overview" rel="noreferrer">Edge: browserhulpmiddelen openen</a></li><li><a href="https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/index.html" rel="noreferrer">Firefox: het netwerkpaneel</a></li><li><a href="https://webkit.org/web-inspector/enabling-web-inspector/" rel="noreferrer">Safari: Web Inspector aanzetten</a></li></ul></section>
+  </main>
+  <footer><p><strong>Alleen voor je eigen site of met schriftelijke toestemming.</strong> Zie je iets bij een site van een ander? Meld het aan de eigenaar en test niet verder.</p><p class="small">De check is gebouwd door een AI-codeeragent op Vincents opdracht en daarna door een tweede AI-agent getest. De check stelt niet vast of je website kwetsbaar is.</p></footer>
+</div>
+<script type="application/json" id="rules-data">__RULES_JSON__</script>
+<script type="text/plain" id="bookmarklet-source">__BOOKMARKLET__</script>
+<script id="page-script">
+__CORE__
+__RENDER__
+__PAGE_SCRIPT__
+</script>
+</body>
+</html>

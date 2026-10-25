@@ -1,0 +1,8 @@
+{
+  "name": "php-lek-check",
+  "version": "1.0.0",
+  "description": "Dutch check for website owners on PHP2Shell (CVE-2026-109618, CVE-2026-109619): reads the PHP signals your own site shows and writes a message for your host. Does not establish whether a site is vulnerable.",
+  "author": {
+    "name": "Vinix24"
+  }
+}

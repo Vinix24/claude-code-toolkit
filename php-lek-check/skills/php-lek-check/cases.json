@@ -1,0 +1,969 @@
+{
+  "schema": 1,
+  "url": "https://jouwsite.nl/",
+  "cases": [
+    {
+      "name": "php-8.2.34",
+      "headers": {
+        "X-Powered-By": "PHP/8.2.34"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.2.34"
+      }
+    },
+    {
+      "name": "php-8.2.35",
+      "headers": {
+        "X-Powered-By": "PHP/8.2.35"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.2.35"
+      }
+    },
+    {
+      "name": "php-8.2.36",
+      "headers": {
+        "X-Powered-By": "PHP/8.2.36"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.2.36"
+      }
+    },
+    {
+      "name": "php-8.3.35",
+      "headers": {
+        "X-Powered-By": "PHP/8.3.35"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.3.35"
+      }
+    },
+    {
+      "name": "php-8.3.36",
+      "headers": {
+        "X-Powered-By": "PHP/8.3.36"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.3.36"
+      }
+    },
+    {
+      "name": "php-8.3.37",
+      "headers": {
+        "X-Powered-By": "PHP/8.3.37"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.3.37"
+      }
+    },
+    {
+      "name": "php-8.4.26",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.26"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.4.26"
+      }
+    },
+    {
+      "name": "php-8.4.27",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.27"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.4.27"
+      }
+    },
+    {
+      "name": "php-8.4.28",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.28"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.4.28"
+      }
+    },
+    {
+      "name": "php-8.5.11",
+      "headers": {
+        "X-Powered-By": "PHP/8.5.11"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.5.11"
+      }
+    },
+    {
+      "name": "php-8.5.12",
+      "headers": {
+        "X-Powered-By": "PHP/8.5.12"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.5.12"
+      }
+    },
+    {
+      "name": "php-8.5.13",
+      "headers": {
+        "X-Powered-By": "PHP/8.5.13"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.5.13"
+      }
+    },
+    {
+      "name": "php-8.4.9",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.9"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.4.9"
+      }
+    },
+    {
+      "name": "php-8.4.100",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.100"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.4.100"
+      }
+    },
+    {
+      "name": "php-8.3.20",
+      "headers": {
+        "X-Powered-By": "PHP/8.3.20"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.3.20"
+      }
+    },
+    {
+      "name": "php-5.4.0",
+      "headers": {
+        "X-Powered-By": "PHP/5.4.0"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "5.4.0"
+      }
+    },
+    {
+      "name": "php-5.6.40",
+      "headers": {
+        "X-Powered-By": "PHP/5.6.40"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "5.6.40"
+      }
+    },
+    {
+      "name": "php-7.2.34",
+      "headers": {
+        "X-Powered-By": "PHP/7.2.34"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "7.2.34"
+      }
+    },
+    {
+      "name": "php-7.3.33",
+      "headers": {
+        "X-Powered-By": "PHP/7.3.33"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "7.3.33"
+      }
+    },
+    {
+      "name": "php-7.4.33",
+      "headers": {
+        "X-Powered-By": "PHP/7.4.33"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast",
+        "php_versie": "7.4.33"
+      }
+    },
+    {
+      "name": "php-8.0.30",
+      "headers": {
+        "X-Powered-By": "PHP/8.0.30"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast",
+        "php_versie": "8.0.30"
+      }
+    },
+    {
+      "name": "php-8.1.33",
+      "headers": {
+        "X-Powered-By": "PHP/8.1.33"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn, tenzij je hoster een backport heeft toegepast",
+        "php_versie": "8.1.33"
+      }
+    },
+    {
+      "name": "php-7.2.34-1~deb10u1",
+      "headers": {
+        "X-Powered-By": "PHP/7.2.34-1~deb10u1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn, vraag de leverancier om bevestiging",
+        "php_versie": "7.2.34-1~deb10u1"
+      }
+    },
+    {
+      "name": "php-7.3.33+ubuntu1",
+      "headers": {
+        "X-Powered-By": "PHP/7.3.33+ubuntu1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn, vraag de leverancier om bevestiging",
+        "php_versie": "7.3.33+ubuntu1"
+      }
+    },
+    {
+      "name": "php-7.4.33-1~deb11u1",
+      "headers": {
+        "X-Powered-By": "PHP/7.4.33-1~deb11u1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "distributie",
+        "beoordeling": "onbekend",
+        "php_versie": "7.4.33-1~deb11u1"
+      }
+    },
+    {
+      "name": "php-8.1.33-0ubuntu1",
+      "headers": {
+        "X-Powered-By": "PHP/8.1.33-0ubuntu1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "distributie",
+        "beoordeling": "onbekend",
+        "php_versie": "8.1.33-0ubuntu1"
+      }
+    },
+    {
+      "name": "php-8.2.34-1~deb12u1",
+      "headers": {
+        "X-Powered-By": "PHP/8.2.34-1~deb12u1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "distributie",
+        "beoordeling": "onbekend",
+        "php_versie": "8.2.34-1~deb12u1"
+      }
+    },
+    {
+      "name": "php-8.4.26+deb13u1",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.26+deb13u1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "distributie",
+        "beoordeling": "onbekend",
+        "php_versie": "8.4.26+deb13u1"
+      }
+    },
+    {
+      "name": "php-8.4.27-1~deb13u1",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.27-1~deb13u1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.4.27-1~deb13u1"
+      }
+    },
+    {
+      "name": "php-8.4.27RC1",
+      "headers": {
+        "X-Powered-By": "PHP/8.4.27RC1"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": null,
+        "beoordeling": "onbekend",
+        "php_versie": "8.4.27RC1"
+      }
+    },
+    {
+      "name": "php-8.5.12-dev",
+      "headers": {
+        "X-Powered-By": "PHP/8.5.12-dev"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": null,
+        "beoordeling": "onbekend",
+        "php_versie": "8.5.12-dev"
+      }
+    },
+    {
+      "name": "php-8.6.0",
+      "headers": {
+        "X-Powered-By": "PHP/8.6.0"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": null,
+        "beoordeling": "onbekend",
+        "php_versie": "8.6.0"
+      }
+    },
+    {
+      "name": "php-9.0.0",
+      "headers": {
+        "X-Powered-By": "PHP/9.0.0"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": null,
+        "beoordeling": "onbekend",
+        "php_versie": "9.0.0"
+      }
+    },
+    {
+      "name": "no-signals",
+      "headers": {},
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "body-is-not-header",
+      "headers": {},
+      "html": "<p>WordPress PHP/8.4.27</p>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "custom-powered-by",
+      "headers": {
+        "X-Powered-By": "Hosting op maat 8.4.27"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "php-without-number",
+      "headers": {
+        "X-Powered-By": "PHP"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "php-incomplete-number",
+      "headers": {
+        "X-Powered-By": "PHP/8.4"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "server-version",
+      "headers": {
+        "Server": "Apache PHP/8.3.20"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.3.20"
+      }
+    },
+    {
+      "name": "case-insensitive-header",
+      "headers": {
+        "x-powered-by": "php/8.4.27"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "bijgewerkt",
+        "beoordeling": "lijkt bijgewerkt volgens het versienummer",
+        "php_versie": "8.4.27"
+      }
+    },
+    {
+      "name": "cms-WordPress",
+      "headers": {},
+      "html": "<META content=\"WordPress 8.4.27\" NAME=\"Generator\" />",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cms-Joomla",
+      "headers": {},
+      "html": "<META content=\"Joomla 8.4.27\" NAME=\"Generator\" />",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cms-Drupal",
+      "headers": {},
+      "html": "<META content=\"Drupal 8.4.27\" NAME=\"Generator\" />",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cms-spoofed-php-number",
+      "headers": {},
+      "html": "<meta name=\"generator\" content=\"WordPress PHP/8.4.27\">",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cms-user-checkbox",
+      "headers": {},
+      "html": "",
+      "cookie": "",
+      "cms": true,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-php-href",
+      "headers": {},
+      "html": "<a href=\"/page.php\"></a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-php-src",
+      "headers": {},
+      "html": "<img src=\"/page.php\"></img>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-php-action",
+      "headers": {},
+      "html": "<form action=\"/page.php\"></form>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-index-href",
+      "headers": {},
+      "html": "<a href=\"index.php?ver=8.4.27\"></a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-index-src",
+      "headers": {},
+      "html": "<img src=\"index.php?ver=8.4.27\"></img>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-index-action",
+      "headers": {},
+      "html": "<form action=\"index.php?ver=8.4.27\"></form>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-content-href",
+      "headers": {},
+      "html": "<a href=\"/wp-content/style.css?ver=8.4.27\"></a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-content-src",
+      "headers": {},
+      "html": "<img src=\"/wp-content/style.css?ver=8.4.27\"></img>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-content-action",
+      "headers": {},
+      "html": "<form action=\"/wp-content/style.css?ver=8.4.27\"></form>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-includes-href",
+      "headers": {},
+      "html": "<a href=\"/wp-includes/script.js?ver=8.4.27\"></a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-includes-src",
+      "headers": {},
+      "html": "<img src=\"/wp-includes/script.js?ver=8.4.27\"></img>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-includes-action",
+      "headers": {},
+      "html": "<form action=\"/wp-includes/script.js?ver=8.4.27\"></form>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-json-href",
+      "headers": {},
+      "html": "<a href=\"/wp-json/?ver=PHP/8.4.27\"></a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-json-src",
+      "headers": {},
+      "html": "<img src=\"/wp-json/?ver=PHP/8.4.27\"></img>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "path-json-action",
+      "headers": {},
+      "html": "<form action=\"/wp-json/?ver=PHP/8.4.27\"></form>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cookie-header",
+      "headers": {
+        "Set-Cookie": [
+          "other=hello; Path=/",
+          "PHPSESSID=private-value; HttpOnly; Path=/"
+        ]
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cookie-readable",
+      "headers": {},
+      "html": "",
+      "cookie": "theme=light; PHPSESSID=private-value",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "cookie-not-name",
+      "headers": {
+        "Set-Cookie": "other=PHPSESSID; Path=/"
+      },
+      "html": "",
+      "cookie": "PHPSESSID_extra=value",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "link-wordpress",
+      "headers": {
+        "Link": "<https://jouwsite.nl/wp-json/>; rel=\"https://api.w.org/\""
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verborgen",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "link-not-relation",
+      "headers": {
+        "Link": "<https://api.w.org/>; rel=\"alternate\""
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "not-php-extension",
+      "headers": {},
+      "html": "<a href=\"/photo.php.jpg\">Photo</a>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "comments-and-script",
+      "headers": {},
+      "html": "<!-- <a href=\"/wp-json/\"> --><script>let url=\"/wp-content/file.php\";</script>",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "geen_php",
+        "beoordeling": "onbekend",
+        "php_versie": null
+      }
+    },
+    {
+      "name": "multiple-modern",
+      "headers": {
+        "X-Powered-By": [
+          "PHP/8.4.27",
+          "PHP/8.2.35"
+        ],
+        "Server": "PHP/8.3.20"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "verouderd",
+        "beoordeling": "kan kwetsbaar zijn",
+        "php_versie": "8.3.20"
+      }
+    },
+    {
+      "name": "multiple-legacy",
+      "headers": {
+        "X-Powered-By": "PHP/7.4.33",
+        "Server": "PHP/7.2.34"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "7.2.34"
+      }
+    },
+    {
+      "name": "multiple-suffix",
+      "headers": {
+        "X-Powered-By": "PHP/7.2.34-1ubuntu1",
+        "Server": "PHP/7.3.33"
+      },
+      "html": "",
+      "cookie": "",
+      "cms": false,
+      "expected": {
+        "uitkomst": "oud",
+        "beoordeling": "kan kwetsbaar zijn; PHP zelf noemt voor deze versie geen reparatie, upgrade nodig",
+        "php_versie": "7.3.33"
+      }
+    }
+  ],
+  "severity_groups": [
+    [
+      "php-5.4.0",
+      "php-7.2.34",
+      "php-7.3.33"
+    ],
+    [
+      "php-7.4.33",
+      "php-8.0.30",
+      "php-8.1.33"
+    ],
+    [
+      "php-8.2.34",
+      "php-8.3.20",
+      "php-8.4.26",
+      "php-8.5.11"
+    ],
+    [
+      "php-8.2.35",
+      "php-8.3.36",
+      "php-8.4.27",
+      "php-8.5.12"
+    ]
+  ]
+}
