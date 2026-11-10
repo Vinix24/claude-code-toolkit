@@ -1,0 +1,10 @@
+[
+  {
+    "feature_id": "pdf-extractor",
+    "feature_name": "PDF extractor in an existing Python service",
+    "topic_blocks": {"parser_work": 3, "python_test": 4, "python_module": 2},
+    "external_deps": [],
+    "dependencies": [],
+    "quality_target": "production-ready"
+  }
+]

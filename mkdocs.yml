@@ -1,0 +1,51 @@
+# Documentation site for the time tools: `pip install -r docs/requirements.txt`, then `mkdocs serve`.
+# docs/ holds the home page and symlinks to each tool's own pages, so every page lives next to its tool.
+site_name: claude-code-toolkit
+site_description: Local-first tools for Claude Code that measure work time and estimate from it.
+repo_url: https://github.com/Vinix24/claude-code-toolkit
+repo_name: Vinix24/claude-code-toolkit
+docs_dir: docs
+strict: true
+validation:
+  anchors: warn
+  unrecognized_links: warn
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Timekeeper: timekeeper.md
+  - Estimator:
+      - Overview: estimator/index.md
+      - Measuring your own codebase: estimator/measuring.md
+      - From PRD to estimate: estimator/prd-to-estimate.md
+      - Re-measuring and calibrating: estimator/calibration.md
+      - Examples from my measurements: estimator/examples.md
