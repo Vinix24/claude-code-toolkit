@@ -11,8 +11,13 @@ Small, composable, local-first tools for [Claude Code](https://claude.com/claude
 | [`slop-lint/`](slop-lint/) | Deterministic linter for AI tics in Dutch prose. Lints every text file Claude writes and hands the findings back; a skill runs the same check on demand, also in Claude Desktop. |
 | [`context-meter/`](context-meter/) | One line above the prompt that shows how full the context is, in the bands of the context-rotation guard: green, yellow and red. |
 | [`php-lek-check/`](php-lek-check/) | Dutch check for website owners on PHP2Shell: reads the PHP signals your own site shows and writes a message for your host. Its README opens with that message, because for most owners the message is all they need. One GET to your own site; nothing else leaves your machine. |
+| [`estimator/`](estimator/) | Estimates a PRD from your own measured work: turns your transcripts into minutes per work block, a feature list into hour bands (median, p75, p95) plus a critical path and wall-clock, and finished work into calibration of the next estimate. A skill plus three stdlib scripts. |
 
 More tools land here over time. Each folder is self-contained: read its README, run its installer.
+
+## Documentation
+
+Timekeeper and the estimator have a documentation site. From the repository root: `pip install -r docs/requirements.txt`, then `mkdocs serve`.
 
 ## Philosophy
 
