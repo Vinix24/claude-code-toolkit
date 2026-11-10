@@ -10,7 +10,9 @@ Two ways to cut blocks. Both leave idle time out.
   turn  Prompt-to-stop. A turn runs from a prompt to the last event before the next prompt.
         Turns with at most gap_minutes of idle between them form one block, and the block's
         duration is the sum of its turns, so that idle is not counted either. This is the
-        definition timekeeper uses for active time.
+        definition timekeeper uses for active time. A wait inside a turn counts, however long, unless
+        max_wait_minutes is set: then a longer pause inside a turn (a permission prompt left open
+        overnight, a laptop asleep mid-turn) is left out as well.
 
 A block's topic is the most frequent topic among its events, leaving out analysis_only when any
 other topic occurs: reading and searching are scaffolding around the real work.
@@ -120,8 +122,13 @@ def edit_line_counts(name: str, inp: dict) -> tuple[int, int]:
 
 
 def is_prompt(ev: dict) -> bool:
-    """True for a line that opens a turn: user text, not a tool result and not injected meta."""
-    if ev.get("type") != "user" or ev.get("isMeta"):
+    """True for a line that opens a turn: any user content that is not a tool result.
+
+    That includes lines Claude Code marks isMeta. Turns started by the system (a scheduled wake-up,
+    a finished background task, a message from another session) are written that way, and skipping
+    them would glue the idle before them onto the previous turn.
+    """
+    if ev.get("type") != "user":
         return False
     content = (ev.get("message") or {}).get("content")
     if isinstance(content, str):
@@ -204,7 +211,7 @@ def _minutes(start: datetime, end: datetime) -> float:
     return (end - start).total_seconds() / 60.0
 
 
-def segment_gap(events: list[dict], gap_minutes: float) -> list[tuple[list[dict], float]]:
+def segment_gap(events: list[dict], gap_minutes: float, max_wait: Optional[float] = None) -> list[tuple[list[dict], float]]:
     """Split time-ordered events at every pause longer than gap_minutes."""
     groups: list[list[dict]] = []
     current: list[dict] = []
@@ -221,7 +228,14 @@ def segment_gap(events: list[dict], gap_minutes: float) -> list[tuple[list[dict]
     return [(g, _minutes(g[0]["_dt"], g[-1]["_dt"])) for g in groups]
 
 
-def segment_turns(events: list[dict], gap_minutes: float) -> list[tuple[list[dict], float]]:
+def _turn_minutes(turn: list[dict], max_wait: Optional[float]) -> float:
+    if max_wait is None:
+        return _minutes(turn[0]["_dt"], turn[-1]["_dt"])
+    steps = (_minutes(a["_dt"], b["_dt"]) for a, b in zip(turn, turn[1:]))
+    return sum(step for step in steps if step <= max_wait)
+
+
+def segment_turns(events: list[dict], gap_minutes: float, max_wait: Optional[float] = None) -> list[tuple[list[dict], float]]:
     """Prompt-to-stop turns, merged into blocks when the idle between two turns is at most gap_minutes."""
     turns: list[list[dict]] = []
     for ev in events:
@@ -239,7 +253,7 @@ def segment_turns(events: list[dict], gap_minutes: float) -> list[tuple[list[dic
             blocks.append((current, active))
             current, active = [], 0.0
         current.extend(turn)
-        active += _minutes(start, end)
+        active += _turn_minutes(turn, max_wait)
         previous_end = end
     if current:
         blocks.append((current, active))
@@ -270,7 +284,7 @@ def make_block(session: str, group: list[dict], minutes: float) -> dict:
     }
 
 
-def blocks_from_events(events: list[dict], mode: str, gap_minutes: float) -> list[dict]:
+def blocks_from_events(events: list[dict], mode: str, gap_minutes: float, max_wait: Optional[float] = None) -> list[dict]:
     """Blocks of classified events (each with ts, topic and the meta fields), per session."""
     if mode not in ("gap", "turn"):
         raise ValueError(f"unknown mode '{mode}', expected 'gap' or 'turn'")
@@ -285,7 +299,7 @@ def blocks_from_events(events: list[dict], mode: str, gap_minutes: float) -> lis
     blocks: list[dict] = []
     for session, session_events in by_session.items():
         session_events.sort(key=lambda e: e["_dt"])
-        for group, minutes in segment(session_events, gap_minutes):
+        for group, minutes in segment(session_events, gap_minutes, max_wait):
             blocks.append(make_block(session, group, minutes))
     return blocks
 
@@ -311,8 +325,9 @@ def events_of_transcript(path: Path, classifier: Classifier) -> list[dict]:
     return events
 
 
-def blocks_of_transcript(path: Path, classifier: Classifier, mode: str, gap_minutes: float) -> list[dict]:
-    blocks = blocks_from_events(events_of_transcript(path, classifier), mode, gap_minutes)
+def blocks_of_transcript(path: Path, classifier: Classifier, mode: str, gap_minutes: float,
+                         max_wait: Optional[float] = None) -> list[dict]:
+    blocks = blocks_from_events(events_of_transcript(path, classifier), mode, gap_minutes, max_wait)
     for block in blocks:
         block["source_file"] = str(path)
     return blocks

@@ -98,10 +98,11 @@ def _load_store(path: Path) -> dict[str, list[dict]]:
     return by_file
 
 
-def refresh(roots: list[Path], data_dir: Path, classifier: Classifier, mode: str, gap_minutes: float) -> tuple[int, int, list[dict]]:
+def refresh(roots: list[Path], data_dir: Path, classifier: Classifier, mode: str, gap_minutes: float,
+            max_wait: Optional[float] = None) -> tuple[int, int, list[dict]]:
     """(transcripts read, transcripts unchanged, every stored block). Updates store and state."""
     store_path, state_path = data_dir / "work-blocks.jsonl", data_dir / "refresh-state.json"
-    settings = {"mode": mode, "gap_minutes": gap_minutes}
+    settings = {"mode": mode, "gap_minutes": gap_minutes, "max_wait_minutes": max_wait}
     state = _load_json(state_path, {})
     if state.get("settings") != settings:
         state, by_file = {"settings": settings, "files": {}}, defaultdict(list)
@@ -115,7 +116,7 @@ def refresh(roots: list[Path], data_dir: Path, classifier: Classifier, mode: str
             unchanged += 1
             continue
         try:
-            by_file[key] = blocks_of_transcript(path, classifier, mode, gap_minutes)
+            by_file[key] = blocks_of_transcript(path, classifier, mode, gap_minutes, max_wait)
         except OSError as exc:
             print(f"WARN: {path}: {exc}", file=sys.stderr)
             continue
@@ -193,7 +194,8 @@ def render_table(rows: list[dict], header: dict, notes: Optional[str], examples:
         "# Topic statistics: my Claude Code work blocks",
         "",
         f"Generated {header['generated']} by refresh_topic_stats.py. Mode `{header['mode']}`, gap {header['gap_minutes']} min, "
-        f"blocks shorter than {header['min_block_minutes']} min excluded. {header['blocks']} blocks.",
+        + (f"pauses inside a turn over {header['max_wait_minutes']} min left out, " if header.get("max_wait_minutes") is not None else "")
+        + f"blocks shorter than {header['min_block_minutes']} min excluded. {header['blocks']} blocks.",
     ]
     if header.get("filters"):
         lines.append(f"Filters: {header['filters']}.")
@@ -246,6 +248,7 @@ def summary(rows: list[dict], header: dict) -> dict:
         "generated": header["generated"],
         "mode": header["mode"],
         "gap_minutes": header["gap_minutes"],
+        "max_wait_minutes": header.get("max_wait_minutes"),
         "min_block_minutes": header["min_block_minutes"],
         "filters": header.get("filters", ""),
         "blocks": sum(r["n"] for r in rows),
@@ -265,6 +268,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--mode", choices=("gap", "turn"), help="gap blocks or prompt-to-stop turn blocks")
     ap.add_argument("--gap-min", type=float, help="pause in minutes that ends a block")
     ap.add_argument("--min-block-min", type=float, help="leave out blocks shorter than this many minutes")
+    ap.add_argument("--max-wait-min", type=float, help="turn mode: leave out pauses inside a turn longer than this")
     ap.add_argument("--path", help="only blocks whose working directory starts with this path")
     ap.add_argument("--since", help="only blocks that start on or after this UTC date (YYYY-MM-DD)")
     ap.add_argument("--until", help="only blocks that start on or before this UTC date (YYYY-MM-DD)")
@@ -281,10 +285,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     mode = args.mode or settings["mode"]
     gap = float(args.gap_min if args.gap_min is not None else settings["gap_minutes"])
     min_block = float(args.min_block_min if args.min_block_min is not None else settings["min_block_minutes"])
+    max_wait = args.max_wait_min if args.max_wait_min is not None else settings["max_wait_minutes"]
+    max_wait = float(max_wait) if max_wait is not None and mode == "turn" else None
     roots = [p.expanduser() for p in (args.projects or [claude_projects_dir()])]
     classifier = Classifier(settings.get("topic_rules"), settings.get("tool_topics"))
 
-    read, unchanged, stored = refresh(roots, data_dir, classifier, mode, gap)
+    read, unchanged, stored = refresh(roots, data_dir, classifier, mode, gap, max_wait)
     path_prefix = str(Path(args.path).expanduser().resolve()) if args.path else None
     filters = ", ".join(f for f in (
         f"path {path_prefix}" if path_prefix else "",
@@ -298,7 +304,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     rows = topic_rows(selected)
     header = {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "mode": mode, "gap_minutes": gap, "min_block_minutes": min_block,
+        "mode": mode, "gap_minutes": gap, "min_block_minutes": min_block, "max_wait_minutes": max_wait,
         "blocks": len(selected), "filters": filters,
     }
     if args.summary_json:

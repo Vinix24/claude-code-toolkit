@@ -58,6 +58,10 @@ def test_changing_the_mode_rebuilds_the_store(projects, tmp_path, capsys):
     capsys.readouterr()
     run(projects, data, "--mode", "turn")
     assert "transcripts read: 2" in capsys.readouterr().out
+    run(projects, data, "--mode", "turn", "--max-wait-min", "30")
+    assert "transcripts read: 2" in capsys.readouterr().out
+    run(projects, data, "--mode", "turn", "--max-wait-min", "30")
+    assert "transcripts read: 0" in capsys.readouterr().out
 
 
 def test_filtered_run_writes_actuals_but_not_the_main_table(projects, tmp_path, capsys):

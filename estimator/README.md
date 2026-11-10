@@ -92,6 +92,7 @@ python3 scripts/calibrate.py drift --old <old snapshot> --new ~/.claude/estimato
 | `external_dep_premiums` | 15 to 75 minutes per type | Connection probing per external dependency; unknown types get `default_external_dep_premium` (25) |
 | `confidence_buffers` | 1.25 from N 15, 1.4 from N 5, else 1.5 | Widens the bands when a topic has few blocks |
 | `mode`, `gap_minutes`, `min_block_minutes` | `gap`, 5, 1.0 | How transcripts become blocks |
+| `max_wait_minutes` | none | Turn mode only: leave out pauses inside a turn longer than this, such as a permission prompt left open |
 | `topic_rules`, `tool_topics` | built in | Replace the classifier rules for your own stack |
 | `calibration_tolerance`, `calibration_min_features`, `drift_min_n` | 0.2, 5, 15 | When calibrate.py calls a ratio off |
 

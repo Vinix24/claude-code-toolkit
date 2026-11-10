@@ -52,6 +52,11 @@ prompt ─[ Claude works ]─ stop   idle   prompt ─[ Claude works ]─ stop
 
 This is the definition timekeeper uses for active time. A long tool call stays inside its turn and counts. Use turn mode when you want your block totals to reconcile with timekeeper.
 
+Two details decide whether turn mode tells the truth on real transcripts:
+
+- **Turns the system starts.** A scheduled wake-up, a finished background task or a message from another session starts a turn without you typing anything. Claude Code writes those as user lines marked `isMeta`. Turn mode treats every user line that is not a tool result as the start of a turn. Treating only typed prompts as turn starts glues the idle before such a line onto the previous turn, and one evening's work becomes a block that runs until the next morning.
+- **A tool call left open.** A permission prompt nobody answers keeps its turn open. In one of my sessions a single `Write` call waited overnight for its result. Turn mode counts that wait, as timekeeper does, unless you set `max_wait_minutes` in the config (or `--max-wait-min`): then any pause inside a turn longer than that is left out. Gap mode drops such a pause anyway, because it is longer than the gap.
+
 Do not mix the modes in one table. The script rebuilds its block store when you switch mode or gap, because every block depends on them. The exact behaviour of both modes is pinned down in `tests/test_workblocks.py`.
 
 ### The mistake I made first
@@ -163,6 +168,11 @@ python3 scripts/refresh_topic_stats.py --mode turn --skip-subagents --min-block-
 python3 ../timekeeper/report.py --path ~/work/app --date 2026-10-01
 ```
 
-Compare `minutes` in the JSON with the active hours in the report. A large difference usually means one of three things: the hooks were not installed for part of the period, sessions ran in a folder outside the path, or subagents were counted. timekeeper filters its time logs by local date and the refresh by UTC date, so near midnight expect small differences.
+Compare `minutes` in the JSON with the active hours in the report. They measure the same mechanism with two differences in scope, and both make turn mode come out higher:
+
+- **System-started turns.** timekeeper's prompt hook fires when you submit a prompt. A turn started by a wake-up, a background task or another session fires no prompt hook, so timekeeper does not count it, while turn mode does. In sessions that run autonomously for long stretches, this is most of the difference.
+- **Dates.** timekeeper filters its time logs by local date and the refresh filters by UTC date. A turn whose stop falls on the next local day drops out of timekeeper's day.
+
+Beyond that, a large difference usually means the hooks were not installed for part of the period, sessions ran in a folder outside the path, or subagents were counted.
 
 The cross-check runs in turn mode, while your main table may be in gap mode. Switching rebuilds the block store, so give the check its own data folder: `ESTIMATOR_HOME=/tmp/check python3 scripts/refresh_topic_stats.py --mode turn ...`.

@@ -39,6 +39,16 @@ def test_turn_mode_keeps_a_long_tool_wait_inside_the_turn(tmp_path):
     assert [b["wall_clock_minutes"] for b in blocks(tmp_path, events, "gap")] == [0.5, 0.5]
 
 
+def test_turn_mode_max_wait_leaves_out_a_tool_call_left_open(tmp_path):
+    events = [prompt(0), assistant(1, tool="Write", tool_input={"file_path": "/w/a.py", "content": "x"}),
+              tool_result(400), assistant(402)]
+    path = write_transcript(tmp_path / "projects" / "p" / "s.jsonl", events)
+    counted = wb.blocks_of_transcript(path, CLASSIFIER, "turn", 5.0)
+    capped = wb.blocks_of_transcript(path, CLASSIFIER, "turn", 5.0, max_wait=30.0)
+    assert [b["wall_clock_minutes"] for b in counted] == [402.0]
+    assert [b["wall_clock_minutes"] for b in capped] == [3.0]
+
+
 def test_sessions_are_cut_separately(tmp_path):
     events = [prompt(0, session="a"), assistant(2, session="a"), prompt(1, session="b"), assistant(4, session="b")]
     result = sorted(blocks(tmp_path, events, "gap"), key=lambda b: b["session"])
@@ -83,9 +93,16 @@ def test_rules_can_be_replaced():
 def test_is_prompt():
     assert wb.is_prompt(prompt(0))
     assert not wb.is_prompt(tool_result(0))
-    assert not wb.is_prompt({**prompt(0), "isMeta": True})
+    assert wb.is_prompt({**prompt(0), "isMeta": True})
     assert wb.is_prompt({"type": "user", "message": {"content": [{"type": "text", "text": "hi"}]}})
+    assert not wb.is_prompt({"type": "user", "message": {"content": "   "}})
     assert not wb.is_prompt(assistant(0))
+
+
+def test_turn_mode_a_system_started_turn_does_not_absorb_the_idle_before_it(tmp_path):
+    wake_up = {**prompt(300), "isMeta": True, "promptSource": "system"}
+    events = [prompt(0), assistant(2), wake_up, assistant(303)]
+    assert [b["wall_clock_minutes"] for b in blocks(tmp_path, events, "turn")] == [2.0, 3.0]
 
 
 def test_edit_line_counts():

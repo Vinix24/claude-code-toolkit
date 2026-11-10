@@ -54,6 +54,8 @@ DEFAULTS: dict = {
     "mode": "gap",
     "gap_minutes": 5.0,
     "min_block_minutes": 1.0,
+    # Turn mode only: pauses inside a turn longer than this are left out. None counts every wait.
+    "max_wait_minutes": None,
     # Classifier overrides: None keeps the built-in rules in workblocks.py.
     "topic_rules": None,
     "tool_topics": None,
