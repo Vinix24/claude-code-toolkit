@@ -120,13 +120,15 @@ The skill helps. It does not unmask anyone.
 
 ## Tested on
 
-Three real posts, kept outside this repository:
+Three real posts, in two rounds on 11 November 2026. The posts and the outputs are kept outside this repository.
 
-| Case | Kind | Outcome the spec requires |
-|---|---|---|
-| A CEO looking for a solo builder for a product site with a shop link | Search request, site | Site, with every condition from the post as a row |
-| A coach who wants to sell a custom GPT as a stand-alone tool | Search request, tool | Proefversie, with the part that needs no model named |
-| A privacy lawyer promising a hand-out on AI recorders for a comment | Comment gate | Koop het gewoon: the maker has since published the hand-out for free |
+| Case | Kind | Outcome in round 2 | What the review changed |
+|---|---|---|---|
+| A CEO looking for a solo builder for a product site with a shop link | Search request, site | Site. A free buy-button library as starting point | The hard part is the visuals, not the payment button, which a platform already solves |
+| A coach who wants to sell a custom GPT as a stand-alone tool | Search request, tool | Use what is there: a platform that puts GPT instructions behind a paywall. Hard part: where customer data goes | "Good enough" now weighs where customer data ends up |
+| A privacy lawyer promising a hand-out on AI recorders for a comment | Comment gate | Use what is there: the maker has since published the hand-out for free. A local note-taker repository as extra | A receipt for "use what is there" says where each part is found |
+
+Round 1 found contradictions in the rules on links, names and downloads, and an example that gave away one test case. Both are fixed.
 
 ## Files
 
