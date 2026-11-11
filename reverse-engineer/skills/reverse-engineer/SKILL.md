@@ -52,7 +52,7 @@ Kijk voordat je iets laat bouwen of het antwoord al bestaat. Dit is vaak de bela
 
 1. **In de post zelf.** Veel gates sommen de inhoud al op. Het beloofde bestand is dan een nette versie van wat er al staat.
 2. **In een update of een comment van de maker.** Soms heeft de maker het beloofde inmiddels openbaar gezet. Kijk in de laatste comments en in een "update" onderaan de post.
-3. **Als product.** Bestaat het gratis of goedkoop? Zoek het op als je kunt zoeken. Een link noem je alleen als je hem geopend hebt. Anders geef je de zoekterm die het dichtst in de buurt komt.
+3. **Als product.** Bestaat het gratis of goedkoop? Zoek het op als je kunt zoeken. Gebruik de zoekfunctie die je hebt: de ingebouwde webzoeker of een zoekdienst die je zelf hebt gekoppeld. Een samenvatting van een zoekdienst is een wegwijzer, geen bron: open de pagina zelf. Formuleer de zoekvraag zelf en plak er niet de post in. Een link noem je alleen als je hem geopend hebt. Anders geef je de zoekterm die het dichtst in de buurt komt.
 4. **Als startpunt in een bestaande repo.** Zoek dit altijd, ook als de uitkomst bouwen wordt. Een repo is een openbare map met code, meestal op GitHub. Vaak heeft iemand het lastige stuk al gebouwd en vrijgegeven. Dan begint de lezer daar en niet bij nul. Hoe je zoekt en toetst staat hieronder.
 
 Bestaat het al? Dan luidt de uitkomst "koop het gewoon" of "haal het daar". Dat is een goede uitkomst. Het bespaart de lezer een avond.
