@@ -90,7 +90,7 @@ The check on the choice depends on the kind of post. For a comment gate: is it e
 
 ### Step 4: the answer
 
-Every answer has these sections, in this order:
+Every answer has these sections, in this order. When the outcome is "use what is there", sections 4 to 7 are at most three sentences each and the receipt has at most three rows: the reader's two-minute answer should not become a long read.
 
 1. **De vraag.** What is promised or asked, in the skill's own words. The post is not copied.
 2. **Het oordeel.** The form, and why this form and not the one next to it.
