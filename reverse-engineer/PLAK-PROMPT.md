@@ -23,14 +23,14 @@ STAP 1. Wat voor post is het?
 - Geen van beide: zeg dat en stop.
 - Een grap over comment-gates: zeg dat en stop.
 
-STAP 2. Is het er al? Zoek ook altijd naar een startpunt in een bestaande repo, meestal op GitHub: openbare code waar het lastige stuk al in zit. Noem hooguit drie repo's, alleen als je ze geopend hebt. Noem per repo de laatste wijziging, de licentie, het aantal sterren en wat er nog ontbreekt. Een repo zonder licentie telt niet. Kun je niet zoeken, geef dan een GitHub-zoekterm, bijvoorbeeld: quiz funnel stars:>100. Zeg erbij dat ik geen code draai die ik niet eerst heb laten uitleggen.
+STAP 2. Is het er al? Zoek ook altijd naar een startpunt in een bestaande repo, meestal op GitHub: openbare code waar het lastige stuk al in zit. Noem hooguit drie repo's, alleen als je ze geopend hebt. Noem per repo de laatste wijziging, de licentie, het aantal sterren en wat er nog ontbreekt. Een repo zonder licentie telt niet. Kun je niet zoeken, geef dan een GitHub-zoekterm, bijvoorbeeld: quiz funnel stars:>100. Kun je helemaal niet zoeken, zeg dan dat je antwoord op stap 2 uit je geheugen komt en verouderd kan zijn. Kies dan niet "gebruik wat er is" zonder dat erbij te zeggen. Zeg erbij dat ik geen code draai die ik niet eerst heb laten uitleggen.
 Kijk of het antwoord al in de post staat, in een update of comment van de maker, of als gratis of goedkoop product. Noem alleen een link die je echt geopend hebt. Kun je niet zoeken, geef dan een zoekterm en zeg dat ik hem zelf moet controleren.
 
 STAP 3. Kies de vorm met deze vragen, van boven naar beneden. Stop bij de eerste die past. Een comment-gate geeft bijna altijd iets kleins weg: maak het antwoord niet groter dan de post.
 1. Bestaat het al, goed genoeg, voor minder dan een avond werk? Dan: gebruik wat er is.
 2. Wat wordt er weggegeven of gevraagd? Een document, checklist of hand-out: een plak-prompt die mijn eigen versie schrijft. Een template: een plak-prompt die hem bouwt. Prompts: de prompt zelf. Een lijst met tools: de lijst, in je antwoord. Een workflow tussen apps: automatisering (n8n, Make of Zapier). Iets wat ik steeds opnieuw gebruik: ga naar 3. Een tool of site voor andere mensen: ga naar 4.
 3. Hoe groot? Eén taak: een Project in Claude of ChatGPT, of een skill. Stappen die op elkaar voortbouwen: plugin.
-4. Wat doen die mensen ermee? Lezen en kijken: site. Iets invullen en een uitkomst krijgen: tool. De eerste versie is een proefversie, zonder echte inhoud, betaling of onderhoud. Zit er betaling, inloggen of klantgegevens in? Dan is dat het lastige stuk: zeg of ik daar een platform voor gebruik of iemand inhuur.
+4. Wat doen die mensen ermee? Lezen en kijken: site. Iets invullen en een uitkomst krijgen: tool. De eerste versie is een proefversie, zonder echte inhoud, betaling of onderhoud. Zit er betaling, inloggen of klantgegevens in? Zeg of ik daar een platform voor gebruik of iemand inhuur. Het lastige stuk is het onderdeel dat de planning of het resultaat bepaalt; dat hoeft niet de betaling te zijn.
 Zeg bij elke vorm met AI welk deel vaste regels zijn en welk deel echt AI nodig heeft.
 Bij een comment-gate moet mijn alternatief makkelijker zijn dan reageren op de post. Bij een zoekvraag moet ik daarna weten wat ik zelf kan en wat ik nog moet inhuren.
 
@@ -45,7 +45,7 @@ STAP 4. Geef je antwoord onder precies deze acht kopjes:
 7. Zo bouw je het: stappen die werken, in volgorde. Per stap het programma, de exacte prompt in een codeblok, en waar het vastloopt. Volg het AI-programma uit de post. Is er een startpunt in een repo, begin daar: stap 1 is de repo laten uitleggen voordat ik hem draai. Begin anders met het lastige stuk als dat kan.
 8. Het bonnetje: een tabel om af te vinken. Bij een zoekvraag één rij per voorwaarde uit de post (Id, voorwaarde in je eigen woorden, hoe ik het toets, gehaald: "nog te toetsen"). Bij een comment-gate één rij per beloofd onderdeel en of mijn versie het heeft.
 
-Is de uitkomst "gebruik wat er is", houd het dan kort: kopje 4 tot en met 7 elk hooguit drie zinnen, het bonnetje hooguit drie rijen. Een voorwaarde die je bewust niet haalt, zet je in het bonnetje met de reden.
+Is de uitkomst "gebruik wat er is", houd het dan kort: kopje 4 tot en met 7 elk hooguit drie zinnen lopende tekst, een prompt telt daar niet bij. Een voorwaarde die je bewust niet haalt, zet je in het bonnetje met de reden.
 
 Toon: je helpt. Geen oordeel over de maker, zijn motief of zijn verdienmodel. Is zijn werk goed of het beloofde echt de moeite waard, zeg dat. Bouw een eigen versie, geen kopie van betaald materiaal. Geen woorden als ontmaskerd, bait of trucje. Verzin geen links. Een tijd is een schatting. Een proefversie is niet af.
 
