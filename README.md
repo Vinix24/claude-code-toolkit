@@ -12,6 +12,9 @@ Small, composable, local-first tools for [Claude Code](https://claude.com/claude
 | [`context-meter/`](context-meter/) | One line above the prompt that shows how full the context is, in the bands of the context-rotation guard: green, yellow and red. |
 | [`php-lek-check/`](php-lek-check/) | Dutch check for website owners on PHP2Shell: reads the PHP signals your own site shows and writes a message for your host. Its README opens with that message, because for most owners the message is all they need. One GET to your own site; nothing else leaves your machine. |
 
+| [`reverse-engineer/`](reverse-engineer/) | Dutch skill that helps you build what a LinkedIn post promises or asks for. Chooses the form first, from a paste prompt to "just buy it", and names the hard part, the time and what self-build does not do. Ships with a paste prompt for ChatGPT and Claude in the browser. |
+| [`onder-de-motorkap/`](onder-de-motorkap/) | Dutch skill that explains what each part of an AI build does and why, also for someone else's tool. Every statement is labelled seen, inferred or unknown. Ships with a paste prompt. |
+
 More tools land here over time. Each folder is self-contained: read its README, run its installer.
 
 ## Philosophy

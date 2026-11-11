@@ -59,7 +59,8 @@ Every answer has these sections, in this order:
 4. **Waar je gegevens heen gaan.** What you type in, where it is sent and where it is kept, as far as that can be seen.
 5. **Wat je zelf kunt aanpassen.** Three changes, from safe to bold, each with what you will see happen.
 6. **Eén proef.** One small experiment that teaches you how the thing works: change this, run it, compare.
-7. **Woordenlijst in de tekst.** Every technical word is explained in one clause where it first appears. There is no separate glossary.
+
+Every technical word is explained in one clause where it first appears. There is no separate glossary.
 
 ### Tone
 

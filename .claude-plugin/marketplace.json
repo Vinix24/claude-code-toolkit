@@ -27,6 +27,18 @@
       "source": "./php-lek-check",
       "version": "1.0.0",
       "description": "Dutch check for website owners on PHP2Shell (CVE-2026-109618, CVE-2026-109619): reads the PHP signals your own site shows and writes a message for your host. Does not establish whether a site is vulnerable."
+    },
+    {
+      "name": "reverse-engineer",
+      "source": "./reverse-engineer",
+      "version": "1.0.0",
+      "description": "Dutch skill that helps you build what a LinkedIn post promises or asks for: comment gates and search requests. Chooses the form first (paste prompt, skill, plugin, proof of concept, site or just buy it), names the hard part, the time and what self-build does not do. Comes with a paste prompt for ChatGPT and Claude in the browser."
+    },
+    {
+      "name": "onder-de-motorkap",
+      "source": "./onder-de-motorkap",
+      "version": "1.0.0",
+      "description": "Dutch skill that explains in plain language what each part of an AI build does and why: a prompt, skill, plugin, workflow, small tool, site or someone else's tool. Labels every statement as seen, inferred or unknown. Comes with a paste prompt for ChatGPT and Claude in the browser."
     }
   ]
 }

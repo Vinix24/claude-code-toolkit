@@ -1,0 +1,8 @@
+{
+  "name": "onder-de-motorkap",
+  "version": "1.0.0",
+  "description": "Dutch skill that explains in plain language what each part of an AI build does and why: a prompt, skill, plugin, workflow, small tool, site or someone else's tool. Labels every statement as seen, inferred or unknown. Comes with a paste prompt for ChatGPT and Claude in the browser.",
+  "author": {
+    "name": "Vinix24"
+  }
+}
