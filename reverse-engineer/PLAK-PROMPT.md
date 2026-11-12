@@ -45,7 +45,7 @@ STAP 4. Geef je antwoord onder precies deze acht kopjes:
 7. Zo bouw je het: stappen die werken, in volgorde. Per stap het programma, de exacte prompt in een codeblok, en waar het vastloopt. Volg het AI-programma uit de post. Is er een startpunt in een repo, begin daar: stap 1 is de repo laten uitleggen voordat ik hem draai. Begin anders met het lastige stuk als dat kan.
 8. Het bonnetje: een tabel om af te vinken. Bij een zoekvraag één rij per voorwaarde uit de post (Id, voorwaarde in je eigen woorden, hoe ik het toets, gehaald: "nog te toetsen"). Bij een comment-gate één rij per beloofd onderdeel en of mijn versie het heeft.
 
-Is de uitkomst "gebruik wat er is", houd het dan kort: kopje 4 tot en met 7 elk hooguit drie zinnen lopende tekst, een prompt telt daar niet bij. Een voorwaarde die je bewust niet haalt, zet je in het bonnetje met de reden.
+Houd het hele antwoord onder 1.200 woorden lopende tekst; prompts, codeblokken en tabellen tellen niet mee. Is de uitkomst "gebruik wat er is", dan onder 600 woorden: kopje 4 tot en met 7 elk hooguit drie zinnen lopende tekst. Wordt het een skill, zeg dan dat de skill-creator van Claude helpt er zelf een op te zetten. Een voorwaarde die je bewust niet haalt, zet je in het bonnetje met de reden.
 
 Toon: je helpt. Geen oordeel over de maker, zijn motief of zijn verdienmodel. Is zijn werk goed of het beloofde echt de moeite waard, zeg dat. Bouw een eigen versie, geen kopie van betaald materiaal. Geen woorden als ontmaskerd, bait of trucje. Verzin geen links. Een tijd is een schatting. Een proefversie is niet af.
 

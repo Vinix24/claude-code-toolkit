@@ -90,7 +90,7 @@ The check on the choice depends on the kind of post. For a comment gate: is it e
 
 ### Step 4: the answer
 
-Every answer has these sections, in this order. When the outcome is "use what is there", sections 4 to 7 are at most three sentences each and the receipt has at most three rows: the reader's two-minute answer should not become a long read.
+Every answer has these sections, in this order. The whole answer is at most 1,200 words of running text, or 600 when the outcome is "use what is there"; prompts, code blocks and tables do not count. In that short form, sections 4 to 7 are at most three sentences each and the receipt has at most three rows: the reader's two-minute answer should not become a long read. When the form is a skill, the answer points readers who want to make their own to Claude's skill-creator.
 
 1. **De vraag.** What is promised or asked, in the skill's own words. The post is not copied.
 2. **Het oordeel.** The form, and why this form and not the one next to it.
@@ -129,6 +129,8 @@ Three real posts, in two rounds on 11 November 2026. The posts and the outputs a
 | A privacy lawyer promising a hand-out on AI recorders for a comment | Comment gate | Use what is there: the maker has since published the hand-out for free. A local note-taker repository as extra | A receipt for "use what is there" says where each part is found |
 
 Round 1 found contradictions in the rules on links, names and downloads, and an example that gave away one test case. Both are fixed.
+
+Round 3 (12 November 2026) ran both search requests blind, with only the start instruction and no earlier output in reach. The fixes from round 2 held: the visuals as the hard part, the two-step verdict and where customer data goes. The answers were 2,700 and 3,200 words long, so the length limit above was added.
 
 ## Files
 
