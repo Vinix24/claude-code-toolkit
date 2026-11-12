@@ -12,3 +12,4 @@ First version. Replaces the private `debunk` and `maker` skills with one skill a
 - `PLAK-PROMPT.md` with the same steps for ChatGPT and Claude in the browser.
 - A hard length limit: at most 1,200 words of running text, 600 for "use what exists". Prompts, code blocks and tables do not count. Added after a third test round produced 2,700 to 3,200 words.
 - Points readers who want to make their own skill to Claude's skill-creator.
+- Maps the reader's situation first: at most five questions before answering, and every prompt it hands out starts with questions about the situation of whoever runs it.
