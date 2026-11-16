@@ -2,7 +2,7 @@
 
 ## 1.0.0 (unreleased)
 
-First version. Replaces the private `debunk` and `maker` skills with one skill and a different tone: it helps, it does not unmask.
+First version. The tone is helping, not unmasking.
 
 - Handles comment gates and search requests.
 - Checks first whether the promised thing already exists: in the post, from the maker, or as a product.
