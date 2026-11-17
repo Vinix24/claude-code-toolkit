@@ -1,0 +1,16 @@
+{
+  "exclude": [
+    "linkedin/stem.md",
+    "linkedin/week-*/notities.md",
+    "linkedin/week-*/voorbeeld.md",
+    "linkedin/week-*/01-haken.md",
+    "linkedin/week-*/02-post.md"
+  ],
+  "rules": {
+    "eigen-woord": "\\b(?:VERVANG-DOOR-JOUW-WOORDEN)\\b",
+    "klant-naam": "\\b(?:VERVANG-DOOR-KLANTNAMEN)\\b",
+    "klant-mail": "[\\w.+-]+@[\\w-]+(?:\\.[\\w-]+)+",
+    "klant-telefoon": "(?:\\+31|0031|\\b0)[\\s-]?(?:\\(0\\))?[1-9](?:[\\s-]?\\d){8}\\b",
+    "klant-bedrag": "€\\s?\\d|\\b\\d[\\d.,]*\\s?(?:euro|eur)\\b"
+  }
+}

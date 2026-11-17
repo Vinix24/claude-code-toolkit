@@ -1,0 +1,8 @@
+{
+  "name": "linkedin-redactie",
+  "version": "1.0.0",
+  "description": "A small team of skills that writes LinkedIn posts in your own voice, in Dutch: hooks from the literal words of your customers, a draft, an edit pass measured by slop-lint and a Friday rule without AI. Stops for your approval after every step. Posts nothing.",
+  "author": {
+    "name": "Vinix24"
+  }
+}
