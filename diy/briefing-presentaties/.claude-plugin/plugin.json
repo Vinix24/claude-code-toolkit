@@ -1,0 +1,8 @@
+{
+  "name": "briefing-presentaties",
+  "version": "1.0.0",
+  "description": "Dutch briefing skill for decks, documents and designs in Claude: asks about your situation and brand first, checks fixed fields per document type, shows the outline before building, never invents numbers and ends with a receipt of where every figure came from.",
+  "author": {
+    "name": "Vinix24"
+  }
+}

@@ -39,6 +39,18 @@
       "source": "./onder-de-motorkap",
       "version": "1.0.0",
       "description": "Dutch skill that explains in plain language what each part of an AI build does and why: a prompt, skill, plugin, workflow, small tool, site or someone else's tool. Labels every statement as seen, inferred or unknown. Comes with a paste prompt for ChatGPT and Claude in the browser."
+    },
+    {
+      "name": "briefing-presentaties",
+      "source": "./diy/briefing-presentaties",
+      "version": "1.0.0",
+      "description": "Dutch briefing skill for decks, documents and designs in Claude: asks about your situation and brand first, checks fixed fields per document type, shows the outline before building, never invents numbers and ends with a receipt of where every figure came from."
+    },
+    {
+      "name": "linkedin-redactie",
+      "source": "./diy/linkedin-posts-in-je-eigen-stem",
+      "version": "1.0.0",
+      "description": "A small team of skills that writes LinkedIn posts in your own voice, in Dutch: hooks from the literal words of your customers, a draft, an edit pass measured by slop-lint and a Friday rule without AI. Stops for your approval after every step. Posts nothing."
     }
   ]
 }
