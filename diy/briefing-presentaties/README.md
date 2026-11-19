@@ -9,7 +9,7 @@ Twee prompts en een skill waarmee Claude een pitchdeck, offerte, salespresentati
 | Bestand | Wat het is |
 |---|---|
 | `huisstijl-prompt.md` | Plak-prompt die je huisstijl vastlegt in een blok van zes regels. Eén keer doen |
-| `briefing-prompt.md` | Plak-prompt voor elk nieuw stuk: situatie, ontbrekende gegevens, opbouw, bouwen, bonnetje |
+| `briefing-prompt.md` | Plak-prompt voor elk nieuw stuk: situatie, ontbrekende gegevens, opbouw, bouwen, vastlegging |
 | `skills/briefing/SKILL.md` | Dezelfde werkwijze als skill, zodat je niets meer hoeft te plakken |
 | `skills/briefing/references/stukken.md` | De vaste velden en bouwregels voor de acht soorten stukken |
 | `skills/briefing/references/huisstijl-interview.md` | Wat de skill vraagt als je nog geen huisstijlblok hebt |

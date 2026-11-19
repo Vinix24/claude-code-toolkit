@@ -31,7 +31,7 @@
     {
       "name": "reverse-engineer",
       "source": "./reverse-engineer",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Dutch skill that helps you build what a LinkedIn post promises or asks for: comment gates and search requests. Chooses the form first (paste prompt, skill, plugin, proof of concept, site or just buy it), names the hard part, the time and what self-build does not do. Comes with a paste prompt for ChatGPT and Claude in the browser."
     },
     {
@@ -43,7 +43,7 @@
     {
       "name": "briefing-presentaties",
       "source": "./diy/briefing-presentaties",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Dutch briefing skill for decks, documents and designs in Claude: asks about your situation and brand first, checks fixed fields per document type, shows the outline before building, never invents numbers and ends with a receipt of where every figure came from."
     },
     {

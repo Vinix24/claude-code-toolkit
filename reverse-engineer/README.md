@@ -103,7 +103,7 @@ Every answer has these sections, in this order. The whole answer is at most 1,20
 5. **Tijd.** How long a first build takes and how long a practised one takes. Stated as an estimate, with what it depends on.
 6. **Wat zelfbouw niet doet.** The limits, before you start: upkeep, payments, security, the maker's own expertise.
 7. **Zo bouw je het.** Steps that run, in order, with the exact prompt or file where one is needed, and what to do where it usually gets stuck.
-8. **Het bonnetje.** For a search request: every condition from the post as a row, in the skill's own words, with how to test it and whether it is met. For a gate: every promised part and whether your build covers it. Before the build the last column says "nog te toetsen".
+8. **De vastlegging.** For a search request: every condition from the post as a row, in the skill's own words, with how to test it and whether it is met. For a gate: every promised part and whether your build covers it. Before the build the last column says "nog te toetsen".
 
 The answer never copies the post. Conditions and promises are described in the skill's own words, so the answer can be published without the maker's text.
 
