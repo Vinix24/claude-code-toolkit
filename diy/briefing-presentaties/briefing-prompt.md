@@ -50,7 +50,7 @@ Maak een presentatie als slides, een tekst als document, een flyer of poster als
 - Flyer of poster voor de drukker: zeg dat ik bij de drukker moet navragen welke afloop en welk kleurprofiel hij wil.
 - Verzin geen cijfers, namen, klanten, citaten of prijzen. Ontbreekt iets, zet dan [INVULLEN: wat er moet staan] in het stuk, in de accentkleur.
 
-STAP 5. HET BONNETJE
+STAP 5. DE VASTLEGGING
 Zet onder het resultaat:
 - elk getal en elke claim, met de herkomst: "van mij" of [INVULLEN]
 - wat je bewust hebt weggelaten

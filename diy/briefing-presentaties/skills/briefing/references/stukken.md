@@ -56,4 +56,4 @@ Per stuk staan hier de velden die je in stap 2 checkt, de opbouw, de vorm en waa
 - **Velden:** de cijfers van dit en vorig kwartaal, drie hoogtepunten, één tegenvaller, de focus voor het volgende kwartaal.
 - **Opbouw:** één slide met de drie cijfers die ertoe doen, tegenover vorig kwartaal. Daarna de hoogtepunten, de tegenvaller en wat ervan geleerd is, de focus en een vraag aan het team.
 - **Vorm:** slides. Gebruik de cijfers uit een geüploade spreadsheet. Een grafiek komt alleen uit die cijfers.
-- **Waar het misgaat:** een verkeerd berekend percentage. Zet elke berekening in het bonnetje: van welk getal naar welk getal.
+- **Waar het misgaat:** een verkeerd berekend percentage. Zet elke berekening in de vastlegging: van welk getal naar welk getal.

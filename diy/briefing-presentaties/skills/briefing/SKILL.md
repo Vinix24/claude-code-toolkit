@@ -3,7 +3,7 @@ name: briefing
 description: >
   Maakt samen met de gebruiker één presentatie, document of ontwerp via een vaste briefing: eerst de
   situatie en de huisstijl, dan de vaste velden per soort stuk, eerst de opbouw en pas daarna bouwen.
-  Verzint geen cijfers, namen of prijzen en zet onder elk stuk een bonnetje met de herkomst. Voor een
+  Verzint geen cijfers, namen of prijzen en zet onder elk stuk een vastlegging met de herkomst. Voor een
   pitchdeck, offerte, salespresentatie per klantsegment, onepager, LinkedIn-carrousel, flyer of poster,
   handboek voor nieuwe medewerkers of kwartaalupdate. Gebruik bij "maak een presentatie", "maak een
   deck", "maak een offerte", "zet dit in slides", "ontwerp een flyer", "maak een onepager", of wanneer
@@ -55,9 +55,9 @@ Maak een presentatie als slides, een tekst als document, een flyer of poster als
 - Gebruik alleen de kleuren en lettertypen uit het huisstijlblok.
 - Elke slidetitel is een conclusie in een hele zin. Wie alleen de titels leest, kent het verhaal.
 - Verzin geen cijfers, namen, klanten, citaten of prijzen. Ontbreekt iets, zet dan `[INVULLEN: wat er moet staan]` in het stuk, in de accentkleur.
-- Reken je iets uit, zoals een groei in procenten, laat dan de berekening zien in het bonnetje.
+- Reken je iets uit, zoals een groei in procenten, laat dan de berekening zien in de vastlegging.
 
-## Stap 5. Het bonnetje
+## Stap 5. De vastlegging
 
 Zet onder het resultaat:
 

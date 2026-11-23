@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- The last section is now called "De vastlegging" instead of "Het bonnetje": it records what was checked, and often says "nog te toetsen" or "niet gemeten".
+
 ## 1.0.0 (unreleased)
 
 First version. The tone is helping, not unmasking.
