@@ -51,6 +51,12 @@
       "source": "./diy/linkedin-posts-in-je-eigen-stem",
       "version": "1.0.0",
       "description": "A small team of skills that writes LinkedIn posts in your own voice, in Dutch: hooks from the literal words of your customers, a draft, an edit pass measured by slop-lint and a Friday rule without AI. Stops for your approval after every step. Posts nothing."
+    },
+    {
+      "name": "search-console-maandcheck",
+      "source": "./diy/search-console-maandcheck",
+      "version": "1.0.0",
+      "description": "Dutch monthly check on Google Search Console exports: AI feature impressions next to clicks, queries on positions 5 to 15, risers and fallers, and an update list. Calculates with code, shows the rule behind every list and holds comparisons until a core update has settled."
     }
   ]
 }
