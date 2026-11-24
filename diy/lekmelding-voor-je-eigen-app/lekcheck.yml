@@ -4,18 +4,22 @@
 # Uitleg stap voor stap: https://vincentvandeth.nl/blog/lekmelding-voor-je-eigen-app
 #
 # Wat het doet, zonder AI:
-# 1. Leest het lock-bestand van de app. Een lock-bestand van Bun (bun.lock of bun.lockb, zoals bij Lovable)
-#    gaat voor op package-lock.json, want Lovable installeert met Bun. Een bun.lockb wordt eerst omgezet
-#    naar bun.lock, met dezelfde versies. Er wordt niets geïnstalleerd.
-# 2. Laat bun audit of npm audit elk onderdeel naast de lijst van bekende lekken leggen.
-# 3. Kijkt per lek of het op de lijst van actief misbruikte lekken van CISA staat.
+# 1. JavaScript in de hoofdmap: leest het lock-bestand. Een lock-bestand van Bun (bun.lock of bun.lockb, zoals
+#    bij Lovable) gaat voor op package-lock.json, want Lovable installeert met Bun. Een bun.lockb wordt eerst
+#    omgezet naar bun.lock, met dezelfde versies. bun audit of npm audit legt elk onderdeel naast de lijst van
+#    bekende lekken.
+# 2. Andere talen, en JavaScript in een submap of met Yarn of pnpm: OSV-Scanner van Google leest de lock-bestanden
+#    en legt elk onderdeel naast de lekdatabase van osv.dev. Die database wordt op de runner geladen en de
+#    vergelijking gebeurt daar. Swift, Python, Go, Ruby, Rust, PHP, Java, .NET, Dart en Elixir.
+#    Hij zoekt tot acht mappen diep en slaat mappen als node_modules, vendor, build en dist over.
+# 3. Kijkt per lek of het op de lijst van CISA staat: de lekken die aanvallers al gebruiken.
 # 4. Zet de uitkomst als reactie onder de issue "Lekcheck". Ook als er geen lek is.
 #    De issue onthoudt welke lekken er vorige keer waren, zodat de reactie zegt wat nieuw is.
 #    GitHub mailt de reactie naar wie de issue volgt. De eigenaar van de repository wordt
 #    eraan toegewezen en volgt hem daardoor vanzelf.
-# Lekcheck leest alleen JavaScript-apps. Vindt hij geen package-lock.json, bun.lock of bun.lockb in de hoofdmap,
-# dan zegt hij één keer welke taal hij wel vond en of GitHub daar zelf lekmeldingen voor maakt.
-# Daarna draait hij stil: geen reactie, geen mail en geen mislukte run.
+# Een bestand waar geen onderdelen uit te lezen zijn, telt als niet getoetst, nooit als schoon.
+# Vindt hij niets wat hij kan lezen, dan zegt hij dat één keer en draait hij daarna stil.
+# Een storing meldt hij één keer. Komt dezelfde storing terug, dan blijft hij stil tot er iets verandert.
 # Het leest alleen. Het verandert niets aan de code. Er zijn geen geheimen nodig:
 # de workflow gebruikt alleen de sleutel die GitHub bij elke run zelf maakt, met de twee rechten hieronder.
 
@@ -23,7 +27,12 @@ name: Lekcheck
 
 on:
   schedule:
+    # 07:30: de ochtendreactie, ook als er niets is.
     - cron: '30 7 * * *'
+      timezone: 'Europe/Amsterdam'
+    # 13:30, 19:30 en 01:30: alleen een reactie als er iets nieuws is, zoals een nieuw lek of een lek dat net op
+    # de lijst van CISA kwam. Wil je dat niet, haal deze regel dan weg.
+    - cron: '30 1,13,19 * * *'
       timezone: 'Europe/Amsterdam'
   workflow_dispatch:
 
@@ -31,13 +40,32 @@ permissions:
   contents: read
   issues: write
 
+# Nooit twee runs tegelijk: die zouden elkaars stand in de issue overschrijven.
+concurrency:
+  group: lekcheck
+  cancel-in-progress: false
+
+# Instellingen. De standaard past voor de meeste apps.
+env:
+  # elke-ochtend: elke ochtend een reactie, ook als er niets is. Zo zie je dat hij draait.
+  # bij-nieuws: alleen een reactie bij een nieuw of opgelost lek of een storing, en op maandag altijd.
+  LEKCHECK_MELDEN: elke-ochtend
+  # Hoe diep hij naar lock-bestanden zoekt, en welke mappen hij overslaat. Elke reactie noemt ze.
+  LEKCHECK_DIEPTE: '8'
+  LEKCHECK_OVERSLAAN: node_modules .git Pods .build build dist vendor .venv venv DerivedData
+  # Een vast issuenummer, als je de reacties altijd in dezelfde issue wilt. Leeg: hij zoekt of maakt de issue zelf.
+  LEKCHECK_ISSUE: ''
+  # Op een openbare repository is de issue voor iedereen zichtbaar, en daarmee de lekken in je app. Daarom meldt
+  # Lekcheck daar niets, tenzij je dit op ja zet. Gebruik op een openbare repository liever Dependabot alerts.
+  LEKCHECK_OPENBAAR: 'nee'
+
 jobs:
   lekcheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      # De actions en Bun staan vast op één versie, zodat een gewijzigde versie niet ongemerkt meedraait.
-      # Node.js en npm komen mee met de runner van GitHub.
+      # De actions, Bun en OSV-Scanner staan vast op één versie, zodat een gewijzigde versie niet ongemerkt
+      # meedraait. Node.js en npm komen mee met de runner van GitHub.
       - name: Code ophalen
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -73,17 +101,80 @@ jobs:
           fi
           for f in yarn.lock pnpm-lock.yaml; do [ -f "$f" ] && ook="$ook $f"; done
           echo "ook=$ook" >> "$GITHUB_OUTPUT"
-          # Bestanden van andere talen die Lekcheck niet leest, tot zes mappen diep: een Xcode-app bewaart
-          # Package.resolved diep in de projectmap. De volgende stap zegt welke taal het is.
-          find . -maxdepth 6 \
-            \( -name node_modules -o -name .git -o -name Pods -o -name .build -o -name build -o -name dist \
-               -o -name vendor -o -name .venv -o -name venv -o -name DerivedData \) -prune -o \
-            \( -name package-lock.json -o -name bun.lock -o -name bun.lockb -o -name yarn.lock -o -name pnpm-lock.yaml -o -name Package.resolved \
-               -o -name Podfile.lock -o -name '*.xcodeproj' -o -name requirements.txt -o -name Pipfile.lock \
-               -o -name poetry.lock -o -name uv.lock -o -name pdm.lock -o -name Gemfile.lock -o -name go.mod \
-               -o -name Cargo.lock -o -name composer.lock -o -name pubspec.lock -o -name pom.xml \
-               -o -name build.gradle -o -name build.gradle.kts -o -name '*.csproj' -o -name mix.lock \) \
-            -print 2>/dev/null | sed 's|^\./||' | sort > "$uit/andere.txt" || true
+          # Lock-bestanden en manifesten, tot acht mappen diep: een Xcode-app bewaart Package.resolved diep in de projectmap.
+          diepte="${LEKCHECK_DIEPTE:-8}"
+          case "$diepte" in ''|*[!0-9]*) diepte=8 ;; esac
+          overslaan=()
+          for m in ${LEKCHECK_OVERSLAAN-node_modules .git Pods .build build dist vendor .venv venv DerivedData}; do
+            overslaan+=(-o -name "$m")
+          done
+          # De namen gaan gescheiden door een nul-teken: een mapnaam met een regeleinde blijft dan één pad.
+          find . -maxdepth "$diepte" \
+            \( -false "${overslaan[@]}" \) -prune -o \
+            \( -name package-lock.json -o -name npm-shrinkwrap.json -o -name bun.lock -o -name bun.lockb \
+               -o -name yarn.lock -o -name pnpm-lock.yaml -o -name Package.resolved -o -name Podfile.lock \
+               -o -name '*.xcodeproj' -o -name '*requirements*.txt' -o -name Pipfile.lock -o -name poetry.lock \
+               -o -name uv.lock -o -name pdm.lock -o -name Gemfile.lock -o -name go.mod -o -name Cargo.lock \
+               -o -name composer.lock -o -name pubspec.lock -o -name pom.xml -o -name gradle.lockfile \
+               -o -name build.gradle -o -name build.gradle.kts -o -name packages.lock.json -o -name '*.csproj' \
+               -o -name '*.fsproj' -o -name '*.vbproj' -o -name mix.lock -o -name packages.config -o -name renv.lock \
+               -o -name gems.locked -o -name pylock.toml -o -name conan.lock -o -name cabal.project.freeze \
+               -o -name stack.yaml.lock \
+               -o -name package.json -o -name pyproject.toml -o -name Pipfile -o -name Gemfile -o -name composer.json \
+               -o -name Cargo.toml -o -name Package.swift -o -name pubspec.yaml -o -name mix.exs \) \
+            -print0 2>/dev/null > "$uit/andere.bin" || true
+          # Wat OSV-Scanner leest. Het JavaScript-lock-bestand in de hoofdmap toetst npm of Bun al. Staat er een,
+          # dan blijven yarn.lock en pnpm-lock.yaml in de hoofdmap buiten de toets: dat is dezelfde app.
+          node - "$uit" <<'JS'
+          const fs = require('node:fs');
+          const uit = process.argv[2];
+          const paden = fs.readFileSync(`${uit}/andere.bin`, 'utf8').split('\0').filter(Boolean)
+            .map((p) => p.replace(/^\.\//, '')).sort();
+          const LEEST = /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|bun\.lock|yarn\.lock|pnpm-lock\.yaml|Package\.resolved|[^/]*requirements[^/]*\.txt|Pipfile\.lock|poetry\.lock|uv\.lock|pdm\.lock|pylock\.toml|Gemfile\.lock|gems\.locked|go\.mod|Cargo\.lock|composer\.lock|pubspec\.lock|pom\.xml|gradle\.lockfile|packages\.lock\.json|packages\.config|[^/]+\.(cs|fs|vb)proj|mix\.lock|renv\.lock|conan\.lock|cabal\.project\.freeze|stack\.yaml\.lock)$/;
+          const jsHoofdmap = ['bun.lock', 'bun.lockb', 'package-lock.json'].some((f) => fs.existsSync(f));
+          const osv = paden.filter((p) => LEEST.test(p) && fs.statSync(p).isFile()
+            && !['package-lock.json', 'bun.lock'].includes(p)
+            && !(jsHoofdmap && ['yarn.lock', 'pnpm-lock.yaml'].includes(p)));
+          fs.writeFileSync(`${uit}/andere.json`, JSON.stringify(paden));
+          fs.writeFileSync(`${uit}/osv-bestanden.json`, JSON.stringify(osv));
+          fs.writeFileSync(`${uit}/osv-bestanden.bin`, osv.map((p) => `${p}\0`).join(''));
+          if (osv.length) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'osv=ja\n');
+          JS
+
+      - name: OSV-Scanner klaarzetten (alleen bij andere talen)
+        if: steps.toets.outputs.osv == 'ja'
+        continue-on-error: true
+        run: |
+          # Versie 2.7.1 van github.com/google/osv-scanner, Apache-2.0. De checksum staat vast: een ander bestand draait niet.
+          curl -sSfL --retry 3 --retry-delay 5 -o "$RUNNER_TEMP/osv-scanner" https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64
+          if ! echo "fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8  $RUNNER_TEMP/osv-scanner" | sha256sum -c -; then
+            rm -f "$RUNNER_TEMP/osv-scanner"
+            exit 1
+          fi
+          chmod +x "$RUNNER_TEMP/osv-scanner"
+
+      - name: Andere talen toetsen
+        if: steps.toets.outputs.osv == 'ja'
+        continue-on-error: true
+        env:
+          OSV_SCANNER_LOCAL_DB_CACHE_DIRECTORY: ${{ runner.temp }}/osv-db
+        run: |
+          uit="$RUNNER_TEMP/lekcheck"
+          if [ ! -x "$RUNNER_TEMP/osv-scanner" ]; then
+            echo "126" > "$uit/osv-uitkomst.txt"
+            echo "OSV-Scanner kon niet worden klaargezet." > "$uit/osv-fout.txt"
+            exit 0
+          fi
+          args=()
+          while IFS= read -r -d '' pad; do args+=(-L "$pad"); done < "$uit/osv-bestanden.bin"
+          # De lekdatabase komt naar de runner en de vergelijking gebeurt hier. Alleen bij requirements.txt en
+          # pom.xml vraagt OSV-Scanner deps.dev van Google welke onderdelen eronder hangen.
+          set +e
+          timeout 900 "$RUNNER_TEMP/osv-scanner" scan source --offline-vulnerabilities --download-offline-databases \
+            --no-call-analysis=go --format json --all-packages "${args[@]}" > "$uit/osv.json" 2> "$uit/osv-fout.txt"
+          echo "$?" > "$uit/osv-uitkomst.txt"
+          # De foutmeldingen staan in de log van de run, niet in de issue: daar kunnen interne adressen in staan.
+          tail -n 20 "$uit/osv-fout.txt" >&2
 
       - name: Issue Lekcheck zoeken of aanmaken
         id: issue
@@ -91,14 +182,36 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BRON: ${{ steps.toets.outputs.bron }}
         run: |
-          # Alleen een issue dat deze workflow zelf maakte. Een issue met dezelfde naam van iemand anders telt niet.
-          nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title,author \
-            --jq '[.[] | select(.title == "Lekcheck" and (.author.login | test("github-actions")))][0].number // empty')
-          # Past de app niet en sloot iemand de issue met die melding, dan telt die gesloten issue ook.
+          # Op een openbare repository zou de issue de lekken van de app aan iedereen tonen.
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .visibility)" = "public" ] && [ "${LEKCHECK_OPENBAAR:-nee}" != "ja" ]; then
+            echo "::warning::Lekcheck meldt niets op een openbare repository: de issue zou je lekken voor iedereen zichtbaar maken. Gebruik hier Dependabot alerts, of zet LEKCHECK_OPENBAAR op ja."
+            echo "stop=ja" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Zonder Issues kan Lekcheck nergens melden. Dan mislukt de run met een duidelijke reden in de log.
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .has_issues)" != "true" ]; then
+            echo "::error::Issues staan uit in deze repository. Zet ze aan onder Settings > General > Features > Issues. Zonder Issues kan Lekcheck niet melden."
+            exit 1
+          fi
+          # Een vast issuenummer uit de instellingen gaat voor.
+          case "${LEKCHECK_ISSUE:-}" in
+            '') nummer="" ;;
+            *[!0-9]*) echo "::error::LEKCHECK_ISSUE moet een nummer zijn."; exit 1 ;;
+            *) nummer="$LEKCHECK_ISSUE" ;;
+          esac
+          # Anders alleen een issue dat GitHub Actions zelf maakte: de auteur moet precies app/github-actions zijn.
+          # Een issue met dezelfde naam van iemand anders telt niet.
+          eigen='[.[] | select(.title == "Lekcheck" and .author.login == "app/github-actions")] | sort_by(.number) | .[0].number // empty'
+          if [ -z "$nummer" ]; then
+            nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'Lekcheck in:title' --limit 100 \
+              --json number,title,author --jq "$eigen")
+          fi
+          # Kan Lekcheck de app niet toetsen en sloot iemand de issue met die melding, dan telt die gesloten issue ook.
           # Zo komt de melding niet opnieuw in een nieuwe issue.
           if [ -z "$nummer" ] && [ "$BRON" = "geen" ]; then
-            nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state closed --limit 200 --json number,title,author,body \
-              --jq '[.[] | select(.title == "Lekcheck" and (.author.login | test("github-actions")) and (.body | test("lekcheck-past-niet")))][0].number // empty')
+            nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state closed --search 'Lekcheck in:title' --limit 100 \
+              --json number,title,author,body \
+              --jq '[.[] | select(.title == "Lekcheck" and .author.login == "app/github-actions" and (.body | test("lekcheck-past-niet")))] | sort_by(.number) | .[0].number // empty')
           fi
           if [ -z "$nummer" ]; then
             uitleg="Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen."
@@ -111,43 +224,70 @@ jobs:
 
       - name: Samenvatting maken
         id: rapport
+        if: steps.issue.outputs.stop != 'ja'
         env:
           BRON: ${{ steps.toets.outputs.bron }}
           OMGEZET: ${{ steps.toets.outputs.omgezet }}
           OOK: ${{ steps.toets.outputs.ook }}
+          LEKCHECK_RUN: ${{ github.event_name }}
           LEKCHECK_MAP: ${{ runner.temp }}/lekcheck
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > "$RUNNER_TEMP/lekcheck.mjs" <<'JS'
           import fs from 'node:fs';
+          import { createHash } from 'node:crypto';
 
           const map = process.env.LEKCHECK_MAP;
           const bron = process.env.BRON;
           const token = process.env.GH_TOKEN;
           const ook = (process.env.OOK ?? '').trim();
           const omgezet = process.env.OMGEZET === 'ja';
-          const ERNST = ['critical', 'high', 'moderate', 'low', 'info'];
-          const ERNST_NL = { critical: 'kritiek', high: 'hoog', moderate: 'middel', low: 'laag', info: 'info' };
+          const ERNST = ['malicious', 'critical', 'high', 'moderate', 'low', 'info', 'onbekend'];
+          const ERNST_NL = { malicious: 'kwaadaardig', critical: 'kritiek', high: 'hoog', moderate: 'middel', low: 'laag', info: 'info', onbekend: 'onbekend' };
           const MARKER = /<!-- lekcheck-stand: (.*?) -->/;
           const PAST_NIET = /<!-- lekcheck-past-niet: (.*?) -->/;
-          // Per bestand: de taal, en of GitHub er zelf lekmeldingen (Dependabot alerts) uit maakt.
-          // Bron: de lijst van ondersteunde ecosystemen van de dependency graph van GitHub, 24-11-2026.
-          // package-lock.json, bun.lock en bun.lockb staan hier voor een submap: in de hoofdmap leest Lekcheck ze zelf.
+          const STORING = /<!-- lekcheck-storing: (.*?) -->/;
+          // GitHub weigert een reactie boven 65.536 tekens. De variabele is er alleen om de afkorting te kunnen toetsen.
+          const MAX_REACTIE = Number(process.env.LEKCHECK_MAX_REACTIE) || 60000;
+          // Per bestand: de taal, en waarom Lekcheck het niet toetst als OSV-Scanner het niet leest.
           const TALEN = [
-            ['package-lock.json', 'JavaScript in een submap', true], ['bun.lock', 'JavaScript in een submap', false],
-            ['bun.lockb', 'JavaScript in een submap', false],
-            ['yarn.lock', 'JavaScript met Yarn', true], ['pnpm-lock.yaml', 'JavaScript met pnpm', true],
-            ['Package.resolved', 'Swift', true],
-            ['Podfile.lock', 'Swift of Objective-C met CocoaPods', false], ['.xcodeproj', 'Swift of Objective-C', null],
-            ['requirements.txt', 'Python', true], ['Pipfile.lock', 'Python', true], ['poetry.lock', 'Python', true],
-            ['uv.lock', 'Python met uv', false], ['pdm.lock', 'Python met PDM', false], ['Gemfile.lock', 'Ruby', true],
-            ['go.mod', 'Go', true], ['Cargo.lock', 'Rust', true], ['composer.lock', 'PHP', true],
-            ['pubspec.lock', 'Dart of Flutter', true], ['pom.xml', 'Java met Maven', true],
-            ['build.gradle', 'Java of Kotlin met Gradle', false], ['build.gradle.kts', 'Kotlin met Gradle', false],
-            ['.csproj', 'C# of .NET', true], ['mix.lock', 'Elixir', false],
+            [/^(package-lock|npm-shrinkwrap)\.json$/, 'JavaScript'], [/^bun\.lock$/, 'JavaScript met Bun'],
+            [/^bun\.lockb$/, 'JavaScript met Bun', 'OSV-Scanner leest alleen bun.lock. Zet het lock-bestand om met bun install --save-text-lockfile'],
+            [/^yarn\.lock$/, 'JavaScript met Yarn'], [/^pnpm-lock\.yaml$/, 'JavaScript met pnpm'],
+            [/^Package\.resolved$/, 'Swift'],
+            [/^Podfile\.lock$/, 'Swift of Objective-C met CocoaPods', 'voor CocoaPods hebben osv.dev en GitHub geen lekdatabase'],
+            [/\.xcodeproj$/, 'Swift of Objective-C', 'er staat geen Package.resolved in GitHub, dus de versies van de pakketten zijn niet bekend'],
+            [/requirements.*\.txt$/, 'Python'], [/^Pipfile\.lock$/, 'Python'], [/^poetry\.lock$/, 'Python'],
+            [/^uv\.lock$/, 'Python met uv'], [/^pdm\.lock$/, 'Python met PDM'], [/^Gemfile\.lock$/, 'Ruby'],
+            [/^go\.mod$/, 'Go'], [/^Cargo\.lock$/, 'Rust'], [/^composer\.lock$/, 'PHP'], [/^pubspec\.lock$/, 'Dart of Flutter'],
+            [/^pom\.xml$/, 'Java met Maven'], [/^gradle\.lockfile$/, 'Java of Kotlin met Gradle'],
+            [/^build\.gradle(\.kts)?$/, 'Java of Kotlin met Gradle', 'OSV-Scanner leest dit bestand niet, alleen een gradle.lockfile'],
+            [/^packages\.lock\.json$/, '.NET'], [/\.(cs|fs|vb)proj$/, '.NET'], [/^packages\.config$/, '.NET'], [/^mix\.lock$/, 'Elixir'],
+            [/^pylock\.toml$/, 'Python'], [/^gems\.locked$/, 'Ruby'], [/^renv\.lock$/, 'R'], [/^conan\.lock$/, 'C of C++ met Conan'],
+            [/^(cabal\.project\.freeze|stack\.yaml\.lock)$/, 'Haskell'],
+          ];
+          // Een manifest noemt de onderdelen, een lock-bestand hun precieze versie. Zonder lock-bestand ernaast, erboven
+          // of eronder liggen de versies niet vast en valt er niets precies te toetsen.
+          const MANIFESTEN = [
+            [/^package\.json$/, 'JavaScript', /^(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?)$/],
+            [/^pyproject\.toml$/, 'Python', /^(poetry\.lock|uv\.lock|pdm\.lock|pylock\.toml|Pipfile\.lock|.*requirements.*\.txt)$/],
+            [/^Pipfile$/, 'Python', /^Pipfile\.lock$/], [/^Gemfile$/, 'Ruby', /^(Gemfile\.lock|gems\.locked)$/],
+            [/^composer\.json$/, 'PHP', /^composer\.lock$/], [/^Cargo\.toml$/, 'Rust', /^Cargo\.lock$/],
+            [/^Package\.swift$/, 'Swift', /^Package\.resolved$/], [/^pubspec\.yaml$/, 'Dart of Flutter', /^pubspec\.lock$/],
+            [/^mix\.exs$/, 'Elixir', /^mix\.lock$/],
           ];
           const UITLEG = 'Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen.';
-          const NIET_GETOETST = 'Niet getoetst: je eigen instellingen, zoals beveiliging per rij en sleutels in de browser. Daarvoor de scan in Lovable (More > Security) of de Security Advisor van Supabase.';
+          const EIGEN = bron === 'geen'
+            ? 'Niet getoetst: je eigen instellingen, zoals wie welke gegevens mag zien en sleutels in de code. Daarvoor is een eigen controle nodig.'
+            : 'Niet getoetst: je eigen instellingen, zoals beveiliging per rij en sleutels in de browser. Daarvoor de scan in Lovable (More > Security) of de Security Advisor van Supabase.';
+          const OVERGESLAGEN = 'Niet doorzocht: mappen als node_modules, vendor, build en dist, en alles dieper dan acht mappen.';
+
+          // Tekst van buiten (namen, versies, titels, paden) kan de opmaak niet breken en niemand noemen.
+          const md = (s) => String(s ?? '').replace(/[\r\n\t]+/g, ' ').replace(/[\\`*_[\]|<>#~]/g, '\\$&').replace(/@/g, '@\u200b').slice(0, 200);
+          const code = (s) => `\`${String(s ?? '').replace(/[\r\n\t]+/g, ' ').replace(/`/g, "'").slice(0, 200)}\``;
+          const VEILIG = /^https:\/\/(github\.com\/advisories\/GHSA(-[0-9a-z]{4}){3}|osv\.dev\/vulnerability\/[A-Za-z0-9._:-]+)$/;
+          const link = (titel, url) => (VEILIG.test(String(url ?? '')) ? `[${md(titel)}](${url})` : md(titel));
+          const kort = (s) => createHash('sha256').update(s).digest('hex').slice(0, 12);
 
           const dag = new Intl.DateTimeFormat('nl-NL', {
             timeZone: 'Europe/Amsterdam', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -165,50 +305,64 @@ jobs:
           const issueTekst = leesTekst('issue.md');
           const vorigeStand = issueTekst.match(MARKER);
           const vorige = vorigeStand ? new Set(vorigeStand[1].split(',').filter(Boolean)) : null;
+          const wasEr = (c) => vorige.has(kort(c)) || vorige.has(c);
 
-          // Wat er aan andere talen in de repository staat.
+          // Wat er in de repository staat, en wat daarvan door OSV-Scanner gaat.
+          const osvBestanden = leesJson('osv-bestanden.json') ?? [];
+          const allePaden = leesJson('andere.json') ?? [];
           const LEEST_ZELF = new Set(['package-lock.json', 'bun.lock', 'bun.lockb']);
-          const herkend = leesTekst('andere.txt').split('\n').filter((pad) => pad && !LEEST_ZELF.has(pad)).flatMap((pad) => {
-            const naam = pad.split('/').pop();
-            const t = TALEN.find(([n]) => (n.startsWith('.') ? naam.endsWith(n) : naam === n));
-            return t ? [{ pad, taal: t[1], github: t[2] }] : [];
+          const herkend = allePaden
+            .filter((pad) => pad && !LEEST_ZELF.has(pad) && fs.existsSync(pad))
+            .flatMap((pad) => {
+              const naam = pad.split('/').pop();
+              const t = TALEN.find(([r]) => r.test(naam));
+              return t ? [{ pad, taal: t[1], reden: t[2] ?? 'dit bestand leest Lekcheck niet' }] : [];
+            });
+          const swiftLijst = herkend.some((h) => /Package\.resolved$/.test(h.pad));
+          const mapVan = (p) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
+          const familie = (a, b) => a === b || a === '' || b === '' || a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
+          const zonderLock = allePaden.flatMap((pad) => {
+            const m = MANIFESTEN.find(([r]) => r.test(pad.split('/').pop()));
+            if (!m || !fs.existsSync(pad)) return [];
+            const heeftLock = allePaden.some((ander) => m[2].test(ander.split('/').pop()) && familie(mapVan(ander), mapVan(pad)));
+            return heeftLock ? [] : [{ pad, taal: m[1], reden: 'er staat geen lock-bestand bij, dus de versies liggen niet vast', manifest: true }];
           });
-          const swiftLijst = herkend.some((h) => /Package\.resolved$|Podfile\.lock$/.test(h.pad));
-          const anders = herkend.filter((h) => !(h.github === null && swiftLijst)).slice(0, 10);
-          // Bij een gewone toets: wat er naast de JavaScript-app staat en niet getoetst wordt.
-          const elders = anders.filter((h) => h.pad !== 'yarn.lock' && h.pad !== 'pnpm-lock.yaml');
+          const anders = [...herkend.filter((h) => !(/\.xcodeproj$/.test(h.pad) && swiftLijst)), ...zonderLock];
+          const toon = (lijst, n, maak) => [...lijst.slice(0, n).map(maak), ...(lijst.length > n ? [`en nog ${lijst.length - n}`] : [])];
 
-          // Past de app niet bij Lekcheck, dan zegt hij dat één keer. Daarna draait hij stil.
-          if (bron === 'geen') {
-            const sleutel = anders.length ? [...new Set(anders.map((h) => h.taal))].sort().join(', ')
-              : (fs.existsSync('package.json') ? 'package.json zonder lock-bestand' : 'niets herkend');
+          // Kan Lekcheck niets lezen, dan zegt hij dat één keer. Daarna draait hij stil.
+          function pastNiet() {
+            const sleutel = anders.length ? [...new Set(anders.map((h) => (h.manifest ? `${h.taal} zonder lock-bestand` : h.taal)))].sort().join(', ')
+              : 'niets herkend';
             const eerder = issueTekst.match(PAST_NIET);
             if (eerder && eerder[1] === sleutel) process.exit(3);
-            const r = [`**${datum}: Lekcheck past niet bij deze app.**`, '',
-              'Lekcheck toetst alleen JavaScript-apps met een package-lock.json, bun.lock of bun.lockb in de hoofdmap.'];
+            const r = [`**${datum}: Lekcheck kan deze app niet toetsen.**`, ''];
             if (anders.length) {
-              r.push('', '| Gevonden | Taal | Maakt GitHub er zelf lekmeldingen uit? |', '|---|---|---|');
-              for (const h of anders) r.push(`| \`${h.pad}\` | ${h.taal} | ${h.github ? 'Ja' : 'Nee'} |`);
+              r.push('| Gevonden | Taal | Waarom niet getoetst |', '|---|---|---|');
+              r.push(...toon(anders, 15, (h) => `| ${code(h.pad)} | ${h.taal} | ${h.reden} |`));
               r.push('');
-              if (anders.some((h) => h.github)) {
-                r.push('Zet daarom Dependabot alerts aan, de bewaking van GitHub zelf: Settings > Advanced Security > Enable bij Dependabot alerts. GitHub mailt daarna standaard bij een nieuw lek met de ernst kritiek of hoog. Over lekken die er al zijn, mailt hij niet: kijk daarvoor één keer in het tabblad Security, bij Dependabot. Een samenvatting per week kan ook: Email weekly digest in je meldingen van GitHub.');
-                r.push('', 'Vanaf 8 december 2026 zet GitHub Dependabot uit op de meeste repositories zonder activiteit in het afgelopen jaar. Werk je lang niet aan de app, kijk dan in Settings of hij nog aanstaat.');
-              } else if (anders.some((h) => h.github === false)) {
-                r.push('Uit dit bestand maakt GitHub zelf geen lekmeldingen. Lekcheck leest het ook niet. Bij Gradle lukt het GitHub wel met Automatic dependency submission, onder Settings > Advanced Security. Dat kost minuten van GitHub Actions. Vraag anders je developer om een toets die het wel leest.');
+              if (anders.some((h) => h.leeg)) {
+                r.push('Uit een lock-bestand zonder onderdelen valt niets te toetsen. Controleer of het actuele lock-bestand van je app in GitHub staat. Dan toetst Lekcheck vanzelf.');
+              } else if (anders.some((h) => h.manifest)) {
+                r.push('Zet het lock-bestand van je app in GitHub, zoals package-lock.json, poetry.lock of Gemfile.lock. Je bouwtool of developer maakt het. Dan toetst Lekcheck vanzelf.');
+              } else if (anders.some((h) => /Podfile\.lock$/.test(h.pad))) {
+                r.push('Voor CocoaPods maakt ook GitHub geen lekmeldingen. Gebruikt de app ook Swift Package Manager, zet dan Package.resolved in GitHub. Dat bestand maakt Xcode zelf. Dan toetst Lekcheck vanzelf.');
+              } else if (anders.some((h) => /build\.gradle(\.kts)?$/.test(h.pad))) {
+                r.push('Laat je developer Gradle de versies vastleggen in een gradle.lockfile. Dan toetst Lekcheck vanzelf. Ook GitHub kan Gradle lezen, met Automatic dependency submission onder Settings > Advanced Security. Dat kost minuten van GitHub Actions.');
+              } else if (anders.some((h) => /bun\.lockb$/.test(h.pad))) {
+                r.push('Zet het lock-bestand om naar bun.lock: vraag je bouwtool om bun install --save-text-lockfile en zet bun.lock in GitHub. Dan toetst Lekcheck vanzelf.');
               } else {
-                r.push('Er staat geen lijst met de versies van de onderdelen in GitHub. Gebruikt de app pakketten van anderen, zet dan Package.resolved in GitHub: dat bestand maakt Xcode zelf. Daarna kan GitHub er lekmeldingen uit maken.');
+                r.push('Gebruikt de app pakketten van anderen, zet dan Package.resolved in GitHub. Dat bestand maakt Xcode zelf. Dan toetst Lekcheck vanzelf.');
               }
-            } else if (fs.existsSync('package.json')) {
-              r.push('', 'Er staat wel een package.json, maar geen lock-bestand. Zonder lock-bestand zijn de precieze versies niet bekend. Vraag je bouwtool of developer om een package-lock.json te maken en die in GitHub te zetten. Dan toetst Lekcheck vanzelf.');
             } else {
-              r.push('', 'In deze repository vond Lekcheck geen bestand dat hij kent. Controleer of de code van je app in deze repository staat.');
+              r.push('In deze repository vond Lekcheck geen lock-bestand dat hij kent. Controleer of de code van je app in deze repository staat.');
             }
-            r.push('', 'Wat GitHub zelf in je repository ziet, staat bij Insights > Dependency graph.');
+            r.push('', OVERGESLAGEN);
             r.push('', 'Je mag deze workflow weghalen: verwijder .github/workflows/lekcheck.yml. Laat je hem staan, dan draait hij elke ochtend zonder reactie, zonder mail en zonder mislukte run. Op een privé-repository kost elke run wel een minuut van het gratis tegoed van GitHub. Komt er een lock-bestand bij dat Lekcheck leest, dan toetst hij vanzelf weer.');
             r.push('', 'Dit bericht komt één keer. Vindt hij later iets anders, dan meldt hij zich opnieuw.');
             r.push('', '<sub>Lekcheck leest alleen. Er is niets aan de code veranderd.</sub>');
             console.log(r.join('\n'));
-            const zonderOud = issueTekst.replace(PAST_NIET, '').trim() || UITLEG;
+            const zonderOud = issueTekst.replace(PAST_NIET, '').replace(STORING, '').trim() || UITLEG;
             fs.writeFileSync(`${map}/issue-nieuw.md`, `${zonderOud}\n\n<!-- lekcheck-past-niet: ${sleutel} -->\n`);
             process.exit(0);
           }
@@ -246,7 +400,7 @@ jobs:
             } catch { return null; }
           }
 
-          // De versie die nu in de app zit, uit het lock-bestand zelf.
+          // De versie die nu in de app zit, uit het lock-bestand zelf. Ook de oude vorm van package-lock.json.
           function versies(pakket) {
             try {
               if (bron === 'npm') {
@@ -255,6 +409,13 @@ jobs:
                 for (const [pad, info] of Object.entries(lock.packages ?? {})) {
                   if ((pad === `node_modules/${pakket}` || pad.endsWith(`/node_modules/${pakket}`)) && info.version) gevonden.add(info.version);
                 }
+                const loop = (deps) => {
+                  for (const [naam, info] of Object.entries(deps ?? {})) {
+                    if (naam === pakket && info?.version) gevonden.add(info.version);
+                    loop(info?.dependencies);
+                  }
+                };
+                loop(lock.dependencies);
                 return [...gevonden];
               }
               const lock = fs.readFileSync('bun.lock', 'utf8');
@@ -264,12 +425,14 @@ jobs:
           }
 
           async function haal(url, kop = {}) {
-            const r = await fetch(url, { headers: { 'user-agent': 'lekcheck-workflow', ...kop } });
+            const r = await fetch(url, { headers: { 'user-agent': 'lekcheck-workflow', ...kop }, signal: AbortSignal.timeout(30000) });
             if (!r.ok) throw new Error(`${r.status} bij ${url}`);
             return r.json();
           }
 
           async function kevLijst() {
+            // LEKCHECK_ZONDER_CISA is er alleen om te toetsen wat er gebeurt als de lijst niet bereikbaar is.
+            if (process.env.LEKCHECK_ZONDER_CISA) return null;
             const adressen = [
               'https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json',
               'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
@@ -284,155 +447,431 @@ jobs:
           }
 
           // Het CVE-veld van een advisory is soms leeg terwijl het nummer wel in de bronnen staat.
+          const cveCache = new Map();
           async function cveNummers(ghsa) {
+            if (cveCache.has(ghsa)) return cveCache.get(ghsa);
             const kop = token ? { authorization: `Bearer ${token}` } : {};
             const a = await haal(`https://api.github.com/advisories/${ghsa}`, kop);
-            const tekst = [a.cve_id ?? '', ...(a.identifiers ?? []).map((i) => i.value), ...(a.references ?? [])].join(' ');
-            return [...new Set(tekst.match(/CVE-\d{4}-\d{4,}/g) ?? [])];
+            // Eerst het officiële veld en de identifiers. Alleen als die leeg zijn de bronnen.
+            const officieel = [a.cve_id ?? '', ...(a.identifiers ?? []).map((i) => i.value)].join(' ').match(/CVE-\d{4}-\d{4,}/g) ?? [];
+            const cves = [...new Set(officieel.length ? officieel : ((a.references ?? []).join(' ').match(/CVE-\d{4}-\d{4,}/g) ?? []))];
+            cveCache.set(ghsa, cves);
+            return cves;
           }
 
           // npm audit geeft een voorstel. Of het alles oplost, laat de toets van de volgende dag zien.
           function werk(fix) {
             if (fix === undefined) return 'Werk het onderdeel bij tot een versie buiten de getroffen reeks';
             if (fix === false) return 'Volgens npm audit: nog geen oplossing';
-            if (fix === true) return 'Volgens npm audit: klein, met `npm audit fix`';
-            if (fix.isSemVerMajor) return `Volgens npm audit: groot. ${fix.name} naar ${fix.version}, een nieuw eerste versienummer`;
-            return `Volgens npm audit: klein. ${fix.name} naar ${fix.version}`;
+            if (fix === true) return 'Volgens npm audit: klein, met npm audit fix';
+            if (fix.isSemVerMajor) return `Volgens npm audit: groot. ${md(fix.name)} naar ${md(fix.version)}, een nieuw eerste versienummer`;
+            return `Volgens npm audit: klein. ${md(fix.name)} naar ${md(fix.version)}`;
           }
 
-          const regels = [];
-          let mislukt = false;
-          let nieuweStand = null;
-
-          const app = lekken(leesJson('app.json'));
-          const alles = lekken(leesJson('alles.json'));
-
-          if (!app || !alles) {
-            mislukt = true;
-            regels.push(`**${datum}: de toets kon niet draaien.**`, '');
-            const fout = leesTekst('fout.txt').trim().slice(0, 600);
-            regels.push(`${bron} audit gaf geen bruikbare uitkomst. Morgen probeert de workflow het opnieuw.`);
-            if (bron === 'bun') regels.push('Gebruikt je bouwtool een nieuwere Bun? Zet dan in lekcheck.yml de regel bun-version op die versie.');
-            if (fout) regels.push('', '```', fout, '```');
-          } else {
-            const sleutel = (l) => `${l.pakket} ${l.url}`;
-            const code = (l) => `${l.pakket}:${(l.url ?? '').match(/GHSA-[\w-]+/)?.[0] ?? l.url}`;
-            const inApp = new Set(app.map(sleutel));
-            const uniek = new Map(alles.map((l) => [sleutel(l), { ...l, inApp: inApp.has(sleutel(l)) }]));
-            const lijst = [...uniek.values()];
-            for (const l of lijst) l.nieuw = vorige ? !vorige.has(code(l)) : false;
-            nieuweStand = lijst.map(code);
-
-            const kev = lijst.length ? await kevLijst() : null;
-            const nietNagekeken = new Set();
-            let zonderNummer = 0;
-            for (const l of lijst) {
-              const ghsa = (l.url ?? '').match(/GHSA-[\w-]+/)?.[0];
-              l.cves = [];
-              if (!ghsa) { nietNagekeken.add(l.pakket); zonderNummer += 1; continue; }
-              try { l.cves = await cveNummers(ghsa); } catch { nietNagekeken.add(l.pakket); zonderNummer += 1; }
-              l.misbruikt = kev ? l.cves.filter((c) => kev.cves.has(c)) : [];
+          // OSV-Scanner. De ernst komt uit de CVSS-score van de groep, anders uit de database zelf.
+          function ernstVanScore(s) {
+            const n = Number.parseFloat(s);
+            if (!Number.isFinite(n) || n <= 0) return null;
+            return n >= 9 ? 'critical' : n >= 7 ? 'high' : n >= 4 ? 'moderate' : 'low';
+          }
+          const ERNST_OSV = { CRITICAL: 'critical', HIGH: 'high', MODERATE: 'moderate', MEDIUM: 'moderate', LOW: 'low' };
+          const TAAL_OSV = {
+            npm: 'JavaScript', PyPI: 'Python', SwiftURL: 'Swift', Go: 'Go', 'crates.io': 'Rust', RubyGems: 'Ruby',
+            Packagist: 'PHP', Maven: 'Java', NuGet: '.NET', Pub: 'Dart', Hex: 'Elixir',
+          };
+          // Alleen voor het advies welke versie het oplost. Of een versie lek is, beslist OSV-Scanner zelf.
+          // Een voorlopige versie (zoals 1.0.0-rc.1) telt lager dan de versie zonder toevoeging.
+          function vergelijk(a, b) {
+            const delen = (v) => String(v).replace(/^v/, '').split(/[-+]/)[0].split(/[^0-9]+/).filter(Boolean).map(Number);
+            const x = delen(a);
+            const y = delen(b);
+            for (let i = 0; i < Math.max(x.length, y.length); i += 1) {
+              const verschil = (x[i] ?? 0) - (y[i] ?? 0);
+              if (verschil) return verschil;
             }
-
+            const voorlopig = (v) => (/[-+]?(alpha|beta|rc|pre|dev|a\d|b\d)/i.test(String(v).replace(/^v?[0-9.]+/, '')) ? 1 : 0);
+            return voorlopig(b) - voorlopig(a);
+          }
+          function toetsOsv() {
+            const uitkomst = leesTekst('osv-uitkomst.txt').trim();
+            const d = leesJson('osv.json');
+            // 0: geen lek, 1: lekken gevonden, 128: geen onderdelen gevonden. Al het andere is een storing.
+            if (!['0', '1', '128'].includes(uitkomst) || (uitkomst !== '128' && !d)) return null;
+            const werkmap = `${process.cwd()}/`;
             const perPakket = new Map();
-            for (const l of lijst) {
-              if (!perPakket.has(l.pakket)) perPakket.set(l.pakket, []);
-              perPakket.get(l.pakket).push(l);
+            const gelezen = new Map();
+            // Onderdelen uit het bestand zelf hebben type lockfile. De rest rekende deps.dev uit: die versies zijn berekend.
+            const vast = new Set();
+            for (const bronOsv of d?.results ?? []) {
+              if (bronOsv.source?.type !== 'lockfile') continue;
+              for (const p of bronOsv.packages ?? []) vast.add(`${p.package.ecosystem}:${p.package.name}:${p.package.version}`);
             }
-            const pakketten = [...perPakket.entries()].map(([naam, ls]) => ({
-              naam,
-              lekken: ls,
-              ernst: ERNST.find((e) => ls.some((l) => l.ernst === e)) ?? 'info',
-              inApp: ls.some((l) => l.inApp),
-              nieuw: ls.filter((l) => l.nieuw && l.inApp).length,
-              misbruikt: [...new Set(ls.flatMap((l) => l.misbruikt ?? []))],
-            })).sort((a, b) => (b.misbruikt.length - a.misbruikt.length) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
-
-            const appPakketten = pakketten.filter((p) => p.inApp);
-            const bouwPakketten = pakketten.filter((p) => !p.inApp);
-            const misbruikt = [...new Set(appPakketten.flatMap((p) => p.misbruikt))];
-            const nieuwTotaal = appPakketten.reduce((n, p) => n + p.nieuw, 0);
-            const n = aantalOnderdelen(leesJson('alles.json'));
-
-            const delen = [];
-            if (!vorige) delen.push('eerste toets');
-            else delen.push(nieuwTotaal ? `${nieuwTotaal} nieuw ${nieuwTotaal === 1 ? 'lek' : 'lekken'} sinds de vorige toets` : 'niets nieuws sinds de vorige toets');
-
-            if (!appPakketten.length) {
-              regels.push(`**${datum}: geen bekend lek in de ${elders.length ? 'JavaScript-onderdelen' : 'onderdelen'} (${delen[0]}).**`);
-            } else {
-              const deelsNagekeken = !kev || appPakketten.some((p) => nietNagekeken.has(p.naam));
-              delen.push(`${appPakketten.length} ${appPakketten.length === 1 ? 'onderdeel' : 'onderdelen'} met een lek`);
-              delen.push(misbruikt.length
-                ? `${misbruikt.length === 1 ? '1 lek dat' : `${misbruikt.length} lekken die`} aanvallers al gebruiken`
-                : (deelsNagekeken ? 'actief misbruik niet (volledig) nagekeken' : 'geen lek dat aanvallers al gebruiken'));
-              regels.push(`**${datum}: ${delen.join(', ')}.**`, '');
-              regels.push('| Onderdeel | Jouw versie | Ernst | Actief misbruikt | Lekken | Wat het werk is |', '|---|---|---|---|---|---|');
-              for (const p of appPakketten) {
-                const kevTekst = p.misbruikt.length
-                  ? `Ja: ${p.misbruikt.map((c) => `${c}, op de lijst sinds ${kev.cves.get(c)}`).join('; ')}`
-                  : (kev && !nietNagekeken.has(p.naam) ? 'Nee' : 'Niet nagekeken');
-                const versie = versies(p.naam).join(', ') || 'onbekend';
-                const naam = p.nieuw ? `${p.naam} (${p.nieuw} nieuw)` : p.naam;
-                regels.push(`| ${naam} | ${versie} | ${ERNST_NL[p.ernst]} | ${kevTekst} | ${p.lekken.length} | ${werk(p.lekken[0].fix)} |`);
-              }
-              regels.push('', '<details><summary>De ernstigste lekken per onderdeel, met hun bron</summary>', '');
-              for (const p of appPakketten) {
-                const volgorde = [...p.lekken].sort((a, b) => (Number(b.nieuw) - Number(a.nieuw)) || ((b.misbruikt?.length ?? 0) - (a.misbruikt?.length ?? 0)) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
-                for (const l of volgorde.slice(0, 5)) {
-                  const kevNoot = l.misbruikt?.length ? ` **Op de lijst van CISA: ${l.misbruikt.join(', ')}.**` : '';
-                  const nieuwNoot = l.nieuw ? '**Nieuw.** ' : '';
-                  regels.push(`- ${nieuwNoot}${p.naam} (getroffen: ${l.reeks}), ${ERNST_NL[l.ernst] ?? l.ernst}: [${l.titel}](${l.url})${kevNoot}`);
+            // Een onderdeel zonder versie valt niet te toetsen: een lek hoort altijd bij een versie.
+            const zonderVersie = new Map();
+            for (const bronOsv of d?.results ?? []) {
+              const pad = String(bronOsv.source?.path ?? '').replace(werkmap, '');
+              gelezen.set(pad, (gelezen.get(pad) ?? 0) + (bronOsv.packages ?? []).length);
+              for (const p of bronOsv.packages ?? []) {
+                if (!p.package?.version) {
+                  zonderVersie.set(`${pad}:${p.package?.name}`, { naam: p.package?.name, bestand: pad });
+                  continue;
                 }
-                if (volgorde.length > 5) regels.push(`- ${p.naam}: nog ${volgorde.length - 5} lekken.`);
+                const sleutel = `${p.package.ecosystem}:${p.package.name}:${p.package.version}`;
+                const vulns = new Map((p.vulnerabilities ?? []).map((v) => [v.id, v]));
+                const lijstOsv = (p.groups ?? []).map((g) => {
+                  const ids = g.ids ?? [];
+                  const id = ids.find((i) => i.startsWith('GHSA-')) ?? ids[0];
+                  const v = vulns.get(id) ?? vulns.get(ids[0]) ?? {};
+                  // Het CVE-nummer komt eerst uit de officiële nummers en aliassen. Staat het daar niet, dan uit de tekst
+                  // en de bronnen: zoals bij het misbruikte lek in Next.js (GHSA-9qr9-h5gf-34mp). Een verwijzing naar een
+                  // ander lek telt zo alleen mee als er geen officieel nummer is.
+                  const records = ids.map((i) => vulns.get(i)).filter(Boolean);
+                  const officieel = [...ids, ...(g.aliases ?? []), ...records.flatMap((r) => r.aliases ?? [])].join(' ').match(/CVE-\d{4}-\d{4,}/g) ?? [];
+                  const uitTekst = officieel.length ? [] : (records.flatMap((r) => [r.details ?? '', ...(r.references ?? []).map((x) => x.url ?? '')]).join(' ').match(/CVE-\d{4}-\d{4,}/g) ?? []);
+                  const kwaadaardig = ids.some((i) => i.startsWith('MAL-'));
+                  const opgelost = [...new Set((v.affected ?? [])
+                    .filter((a) => String(a.package?.name ?? '').toLowerCase() === String(p.package.name).toLowerCase())
+                    .flatMap((a) => (a.ranges ?? []).flatMap((r) => (r.events ?? []).map((e) => e.fixed)))
+                    .filter((f) => f && !/^[0-9a-f]{40}$/.test(f)))]
+                    .filter((f) => vergelijk(f, p.package.version) > 0).sort(vergelijk);
+                  return {
+                    id,
+                    cves: [...new Set([...officieel, ...uitTekst])],
+                    ernst: kwaadaardig ? 'malicious' : (ernstVanScore(g.max_severity) ?? ERNST_OSV[String(v.database_specific?.severity ?? '').toUpperCase()] ?? 'onbekend'),
+                    titel: v.summary || id,
+                    url: id?.startsWith('GHSA-') ? `https://github.com/advisories/${id}` : `https://osv.dev/vulnerability/${id}`,
+                    opgelost: opgelost[0] ?? null,
+                  };
+                });
+                // Een onderdeel kan uit het bestand zelf en uit de opgezochte onderdelen eronder komen. Het telt één keer.
+                const eerder = perPakket.get(sleutel);
+                if (!eerder || lijstOsv.length > eerder.lekken.length) {
+                  perPakket.set(sleutel, {
+                    taal: TAAL_OSV[p.package.ecosystem] ?? p.package.ecosystem, naam: p.package.name, versie: p.package.version,
+                    berekend: !vast.has(sleutel), bestand: eerder?.bestand ?? pad, lekken: lijstOsv,
+                  });
+                }
               }
-              regels.push('', '</details>');
             }
+            // Een bestand waar OSV-Scanner geen onderdelen uit las, telt als niet getoetst. Nooit als schoon.
+            return {
+              pakketten: [...perPakket.values()],
+              n: perPakket.size,
+              zonderVersie: [...zonderVersie.values()],
+              gelezen: [...gelezen.entries()].filter(([, aantal]) => aantal > 0).map(([pad]) => pad).sort(),
+            };
+          }
 
-            if (bouwPakketten.length) {
-              regels.push('', `Alleen bij het bouwen: ${bouwPakketten.map((p) => `${p.naam} (${ERNST_NL[p.ernst]})`).join(', ')}. Die draaien niet in de app zelf.`);
-            }
+          const storingen = [];
+          const stand = [];
+          const jsLock = bron === 'npm' ? 'package-lock.json' : 'bun.lock';
 
-            const lock = bron === 'npm' ? 'package-lock.json' : (omgezet ? 'bun.lockb (omgezet naar bun.lock, met dezelfde versies)' : 'bun.lock');
-            regels.push('', '**Waarom dit de uitkomst is.**');
-            regels.push(`${bron} audit legde ${n ? `de ${n} onderdelen` : 'de onderdelen'} uit ${lock} naast de lijst van bekende lekken. Dat is een vaste regel: dezelfde versies geven elke dag dezelfde uitkomst. Er zit geen AI in deze toets.`);
-            if (ook) regels.push(`Er staat ook ${ook} in de repository. Dat bestand is niet gelezen. Vraag je bouwtool welk lock-bestand actueel is.`);
-            if (elders.length) regels.push(`Ook gevonden en niet getoetst: ${elders.map((h) => `${h.pad} (${h.taal})`).join(', ')}. Lekcheck leest alleen JavaScript.`);
-            if (!lijst.length) {
-              regels.push('Actief misbruik: geen lek om te toetsen.');
-            } else if (!kev) {
-              regels.push('Actief misbruik: de lijst van CISA was niet bereikbaar, dus niet nagekeken.');
-            } else if (zonderNummer) {
-              regels.push(`Actief misbruik: getoetst aan de lijst van CISA, versie ${kev.versie}. Van ${zonderNummer} van de ${lijst.length} lekken kon het CVE-nummer niet worden opgehaald. Die zijn niet nagekeken.`);
+          // JavaScript in de hoofdmap.
+          let js = null;
+          let jsLeeg = false;
+          if (bron !== 'geen') {
+            const app = lekken(leesJson('app.json'));
+            const alles = lekken(leesJson('alles.json'));
+            if (!app || !alles) {
+              console.error(leesTekst('fout.txt').slice(-3000));
+              const s = [`${bron} audit gaf geen bruikbare uitkomst. De foutmelding staat in de log van de run, onder Actions. Morgen probeert de workflow het opnieuw.`];
+              if (bron === 'bun') s.push('Gebruikt je bouwtool een nieuwere Bun? Zet dan in lekcheck.yml de regel bun-version op die versie.');
+              storingen.push({ sleutel: `js-${bron}`, tekst: s });
+            } else if (aantalOnderdelen(leesJson('alles.json')) === 0) {
+              jsLeeg = true;
             } else {
-              regels.push(`Actief misbruik: getoetst aan de lijst van CISA, versie ${kev.versie}.`);
-            }
-            if (appPakketten.length && bron === 'npm') {
-              regels.push('Het werk is een voorstel van npm audit. Of de update alles oplost, laat de toets van de volgende dag zien.');
-            }
-            if (appPakketten.length) {
-              regels.push('', 'Wat nu: plak deze reactie in de plak-prompt uit de blog (deel B). Je krijgt uitleg en een opdracht voor je bouwtool of je developer. Test een update eerst en publiceer daarna: de toets kijkt naar de code in GitHub, niet naar je live app.');
+              const sleutel = (l) => `${l.pakket} ${l.url}`;
+              const codeJs = (l) => `${l.pakket}:${(l.url ?? '').match(/GHSA-[\w-]+/)?.[0] ?? l.url}`;
+              const inApp = new Set(app.map(sleutel));
+              const uniek = new Map(alles.map((l) => [sleutel(l), { ...l, inApp: inApp.has(sleutel(l)) }]));
+              const lijst = [...uniek.values()];
+              for (const l of lijst) {
+                l.code = codeJs(l);
+                l.nieuw = vorige ? !wasEr(l.code) : false;
+              }
+              stand.push(...lijst.map((l) => kort(codeJs(l))));
+              js = { lijst, n: aantalOnderdelen(leesJson('alles.json')) };
             }
           }
 
-          regels.push('', NIET_GETOETST);
+          // Andere talen, via OSV-Scanner.
+          let osv = null;
+          if (osvBestanden.length) {
+            osv = toetsOsv();
+            if (!osv) {
+              const uitkomst = leesTekst('osv-uitkomst.txt').trim() || 'geen';
+              console.error(leesTekst('osv-fout.txt').slice(-3000));
+              storingen.push({
+                sleutel: `osv-${uitkomst}`,
+                tekst: [`OSV-Scanner gaf geen bruikbare uitkomst voor ${osvBestanden.length === 1 ? code(osvBestanden[0]) : `${osvBestanden.length} bestanden`} (code ${md(uitkomst)}). De foutmelding staat in de log van de run, onder Actions.`],
+              });
+            } else {
+              for (const p of osv.pakketten) {
+                for (const l of p.lekken) {
+                  const c = `osv:${p.taal}:${p.naam}:${l.id}`;
+                  l.code = c;
+                  l.nieuw = vorige ? !wasEr(c) : false;
+                  stand.push(kort(c));
+                }
+              }
+            }
+          }
+
+          // Welke gevonden bestanden echt getoetst zijn.
+          for (const h of anders) {
+            h.getoetst = Boolean(osv?.gelezen.includes(h.pad));
+            if (osv && !h.getoetst && osvBestanden.includes(h.pad)) {
+              h.leeg = true;
+              h.reden = 'OSV-Scanner las er geen onderdelen uit: het bestand is leeg of in een vorm die hij niet kent';
+            }
+          }
+          // Wat er staat maar niet getoetst is. yarn.lock en pnpm-lock.yaml in de hoofdmap naast een JavaScript-lock-bestand
+          // zijn dezelfde app: die staan apart. Bij een storing van OSV-Scanner zegt de storing het al.
+          const nietGetoetst = anders.filter((h) => !h.getoetst
+            && !(bron !== 'geen' && (h.pad === 'yarn.lock' || h.pad === 'pnpm-lock.yaml'))
+            && !(!osv && osvBestanden.includes(h.pad) && storingen.length));
+          if (jsLeeg) nietGetoetst.unshift({ pad: jsLock, taal: 'JavaScript', reden: `${bron} audit las er geen onderdelen uit` });
+          if (bron === 'geen' && !storingen.length && !osv?.gelezen.length) pastNiet();
+
+          // Dezelfde storing als de vorige keer, en verder niets getoetst: dan geen nieuwe reactie en geen mislukte run.
+          const storingSleutel = storingen.map((s) => s.sleutel).sort().join(',');
+          const vorigeStoring = issueTekst.match(STORING)?.[1] ?? '';
+          const getoetst = Boolean(js || osv?.gelezen.length);
+          if (storingen.length && !getoetst && storingSleutel === vorigeStoring) process.exit(3);
+          const nieuweStoring = storingen.length > 0 && storingSleutel !== vorigeStoring;
+
+          // Actief misbruik, met een vaste regel naast de lijst van CISA.
+          const osvLekken = (osv?.pakketten ?? []).flatMap((p) => p.lekken);
+          const kev = (js?.lijst.length || osvLekken.length) ? await kevLijst() : null;
+          const nietNagekeken = new Set();
+          let zonderNummer = 0;
+          for (const l of js?.lijst ?? []) {
+            const ghsa = (l.url ?? '').match(/GHSA-[\w-]+/)?.[0];
+            l.cves = [];
+            if (!ghsa) { nietNagekeken.add(l.pakket); zonderNummer += 1; continue; }
+            try { l.cves = await cveNummers(ghsa); } catch { nietNagekeken.add(l.pakket); zonderNummer += 1; }
+            l.misbruikt = kev ? l.cves.filter((c) => kev.cves.has(c)) : [];
+          }
+          for (const l of osvLekken) l.misbruikt = kev ? l.cves.filter((c) => kev.cves.has(c)) : [];
+          // Een lek dat er al was en nu op de lijst van CISA staat, is ook nieuws: aanvallers gebruiken het nu.
+          // "cisa-v1" in de stand zegt dat de vorige toets dit al bijhield. Zonder die code telt hij het de eerste keer niet.
+          let nieuwOpCisa = 0;
+          stand.push('cisa-v1');
+          for (const l of [...(js?.lijst ?? []), ...osvLekken]) {
+            if (!l.misbruikt?.length || !l.code) continue;
+            // De markering begint met een k, zodat de telling van opgeloste lekken hem overslaat.
+            const c = `k${kort(`${l.code}|cisa`)}`;
+            stand.push(c);
+            if (vorige?.has('cisa-v1') && !l.nieuw && !vorige.has(c)) nieuwOpCisa += 1;
+          }
+          const kevTekst = (p, nagekeken) => (p.misbruikt.length
+            ? `Ja: ${p.misbruikt.map((c) => `${c}, sinds ${kev.cves.get(c)}`).join('; ')}`
+            : (kev && nagekeken ? 'Niet op de lijst' : 'Niet nagekeken'));
+
+          // De JavaScript-onderdelen per pakket.
+          const perPakket = new Map();
+          for (const l of js?.lijst ?? []) {
+            if (!perPakket.has(l.pakket)) perPakket.set(l.pakket, []);
+            perPakket.get(l.pakket).push(l);
+          }
+          const pakketten = [...perPakket.entries()].map(([naam, ls]) => ({
+            naam,
+            lekken: ls,
+            ernst: ERNST.find((e) => ls.some((l) => l.ernst === e)) ?? 'info',
+            inApp: ls.some((l) => l.inApp),
+            nieuw: ls.filter((l) => l.nieuw).length,
+            misbruikt: [...new Set(ls.flatMap((l) => l.misbruikt ?? []))],
+          })).sort((a, b) => (b.misbruikt.length - a.misbruikt.length) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+          const appPakketten = pakketten.filter((p) => p.inApp);
+          const bouwPakketten = pakketten.filter((p) => !p.inApp);
+
+          // De onderdelen in andere talen met een lek.
+          const osvPakketten = (osv?.pakketten ?? []).filter((p) => p.lekken.length).map((p) => ({
+            ...p,
+            ernst: ERNST.find((e) => p.lekken.some((l) => l.ernst === e)) ?? 'onbekend',
+            nieuw: p.lekken.filter((l) => l.nieuw).length,
+            misbruikt: [...new Set(p.lekken.flatMap((l) => l.misbruikt))],
+          })).sort((a, b) => (b.misbruikt.length - a.misbruikt.length) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+
+          const alleMetLek = [...appPakketten, ...osvPakketten, ...bouwPakketten];
+          const misbruikt = [...new Set(alleMetLek.flatMap((p) => p.misbruikt))];
+          const nieuwTotaal = alleMetLek.reduce((n, p) => n + p.nieuw, 0);
+          const metLek = appPakketten.length + osvPakketten.length;
+          // Opgeloste lekken: wat vorige keer in de stand stond en nu niet meer. Alleen korte codes tellen: een stand
+          // uit een oudere versie van Lekcheck bevat volledige namen.
+          const nuStand = new Set(stand);
+          const opgelost = (vorige && getoetst && !storingen.length)
+            ? [...vorige].filter((c) => /^[0-9a-f]{12}$/.test(c) && !nuStand.has(c)).length : 0;
+          // Melden bij nieuws: geen reactie als er niets veranderde, behalve op maandag. Zo zie je dat hij draait.
+          const maandag = dag.toLowerCase().startsWith('maandag');
+          if (process.env.LEKCHECK_MELDEN === 'bij-nieuws' && vorige && getoetst && !nieuwTotaal && !opgelost && !nieuwOpCisa && !storingen.length && !maandag) process.exit(3);
+          // Een geplande run buiten de ochtend meldt alleen nieuws: een nieuw lek, een lek dat net op de lijst van CISA
+          // kwam, of een nieuwe storing. LEKCHECK_UUR is er alleen om dit te kunnen toetsen.
+          const uur = Number(process.env.LEKCHECK_UUR || new Intl.DateTimeFormat('nl-NL', { timeZone: 'Europe/Amsterdam', hour: 'numeric', hourCycle: 'h23' }).format(new Date()));
+          const tussendoor = process.env.LEKCHECK_RUN === 'schedule' && !(uur >= 5 && uur < 12);
+          if (tussendoor && vorige && !nieuwTotaal && !nieuwOpCisa && !nieuweStoring) process.exit(3);
+
+          // De kop.
+          const regels = [];
+          const details = [];
+          const delen = [];
+          const nieuws = [];
+          if (nieuwTotaal) nieuws.push(nieuwTotaal === 1 ? '1 nieuw lek' : `${nieuwTotaal} nieuwe lekken`);
+          if (nieuwOpCisa) nieuws.push(`${nieuwOpCisa} nieuw op de lijst van CISA`);
+          if (opgelost) nieuws.push(`${opgelost} opgelost`);
+          delen.push(!vorige ? 'eerste toets' : (nieuws.length ? `${nieuws.join(' en ')} sinds de vorige toets` : 'niets nieuws sinds de vorige toets'));
+          const storingNoot = storingen.length ? ' Een deel van de toets kon niet draaien.' : '';
+          if (!getoetst) {
+            regels.push(storingen.length ? `**${datum}: de toets kon niet draaien.**` : `**${datum}: Lekcheck las geen onderdelen.**`);
+          } else if (!metLek) {
+            const welke = (storingen.length || nietGetoetst.length || osv?.zonderVersie?.length || (ook && bron !== 'geen')) ? 'de getoetste onderdelen' : 'de onderdelen';
+            const bouw = bouwPakketten.length ? ` van de app zelf. ${bouwPakketten.length} ${bouwPakketten.length === 1 ? 'onderdeel' : 'onderdelen'} voor het bouwen ${bouwPakketten.length === 1 ? 'heeft' : 'hebben'} wel een lek` : '';
+            regels.push(`**${datum}: geen bekend lek in ${welke}${bouw} (${delen[0]}).${storingNoot}**`);
+          } else {
+            const deelsNagekeken = !kev || appPakketten.some((p) => nietNagekeken.has(p.naam));
+            const kwaad = alleMetLek.filter((p) => p.ernst === 'malicious').length;
+            if (kwaad) delen.push(`${kwaad === 1 ? '1 kwaadaardig pakket' : `${kwaad} kwaadaardige pakketten`}: verwijderen`);
+            delen.push(`${metLek} ${metLek === 1 ? 'onderdeel' : 'onderdelen'} met een lek`);
+            delen.push(misbruikt.length
+              ? `${misbruikt.length === 1 ? '1 lek' : `${misbruikt.length} lekken`} op de lijst van CISA: aanvallers gebruiken ${misbruikt.length === 1 ? 'het' : 'ze'} al`
+              : (deelsNagekeken ? 'lijst van CISA niet (volledig) nagekeken' : 'geen lek op de lijst van CISA'));
+            regels.push(`**${datum}: ${delen.join(', ')}.${storingNoot}**`);
+          }
+
+          // De tabel voor JavaScript, en de lekken in onderdelen die alleen bij het bouwen draaien.
+          const detailsJs = (lijst, label) => {
+            for (const p of lijst) {
+              const volgorde = [...p.lekken].sort((a, b) => (Number(b.nieuw) - Number(a.nieuw)) || ((b.misbruikt?.length ?? 0) - (a.misbruikt?.length ?? 0)) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+              for (const l of volgorde.slice(0, 5)) {
+                const kevNoot = l.misbruikt?.length ? ` **Op de lijst van CISA: ${l.misbruikt.join(', ')}.**` : '';
+                const nieuwNoot = l.nieuw ? '**Nieuw.** ' : '';
+                details.push(`- ${nieuwNoot}${md(p.naam)}${label} (getroffen: ${md(l.reeks)}), ${ERNST_NL[l.ernst] ?? md(l.ernst)}: ${link(l.titel, l.url)}${kevNoot}`);
+              }
+              if (volgorde.length > 5) details.push(`- ${md(p.naam)}: nog ${volgorde.length - 5} lekken.`);
+            }
+          };
+          if (appPakketten.length) {
+            regels.push('', '| Onderdeel | Jouw versie | Ernst | Op de lijst van CISA | Lekken | Wat het werk is |', '|---|---|---|---|---|---|');
+            for (const p of appPakketten) {
+              const versie = versies(p.naam).map(md).join(', ') || 'onbekend';
+              const naam = p.nieuw ? `${md(p.naam)} (${p.nieuw} nieuw)` : md(p.naam);
+              regels.push(`| ${naam} | ${versie} | ${ERNST_NL[p.ernst]} | ${kevTekst(p, !nietNagekeken.has(p.naam))} | ${p.lekken.length} | ${werk(p.lekken[0].fix)} |`);
+            }
+            detailsJs(appPakketten, '');
+          }
+
+          // De tabel voor de andere talen.
+          if (osvPakketten.length) {
+            if (appPakketten.length) regels.push('', '**Andere talen**');
+            regels.push('', '| Onderdeel | Taal | Jouw versie | Ernst | Op de lijst van CISA | Lekken | Wat het werk is |', '|---|---|---|---|---|---|---|');
+            for (const p of osvPakketten) {
+              const opgelost = p.lekken.map((l) => l.opgelost).filter(Boolean).sort(vergelijk).pop();
+              const zonder = p.lekken.filter((l) => !l.opgelost).length;
+              const werkOsv = p.ernst === 'malicious' ? '**Kwaadaardig pakket: niet bijwerken maar verwijderen.** Laat nagaan of het al gedraaid heeft'
+                : (!zonder ? `Volgens osv.dev opgelost in ${md(opgelost)}`
+                  : (zonder === p.lekken.length ? 'Volgens osv.dev nog geen opgeloste versie bekend'
+                    : `Volgens osv.dev: ${md(opgelost)} lost ${p.lekken.length - zonder} van de ${p.lekken.length} op. Voor de rest nog geen opgeloste versie`));
+              const naam = p.nieuw ? `${md(p.naam)} (${p.nieuw} nieuw)` : md(p.naam);
+              regels.push(`| ${naam} | ${md(p.taal)} | ${md(p.versie)}${p.berekend ? ' (berekend)' : ''} | ${ERNST_NL[p.ernst]} | ${kevTekst(p, true)} | ${p.lekken.length} | ${werkOsv} |`);
+            }
+            for (const p of osvPakketten) {
+              const volgorde = [...p.lekken].sort((a, b) => (Number(b.nieuw) - Number(a.nieuw)) || (b.misbruikt.length - a.misbruikt.length) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+              for (const l of volgorde.slice(0, 5)) {
+                const kevNoot = l.misbruikt.length ? ` **Op de lijst van CISA: ${l.misbruikt.join(', ')}.**` : '';
+                const nieuwNoot = l.nieuw ? '**Nieuw.** ' : '';
+                details.push(`- ${nieuwNoot}${md(p.naam)} (${code(p.bestand)}), ${ERNST_NL[l.ernst]}: ${link(l.titel, l.url)}${kevNoot}`);
+              }
+              if (volgorde.length > 5) details.push(`- ${md(p.naam)}: nog ${volgorde.length - 5} lekken.`);
+            }
+          }
+
+          if (bouwPakketten.length) {
+            regels.push('', `Alleen bij het bouwen: ${bouwPakketten.map((p) => `${md(p.naam)} (${ERNST_NL[p.ernst]}${p.nieuw ? `, ${p.nieuw} nieuw` : ''})`).join(', ')}. Die draaien meestal niet in de app zelf. Controleer dat bij je bouwtool of developer.`);
+            detailsJs(bouwPakketten, ', alleen bij het bouwen');
+          }
+          if (details.length) regels.push('', '<details><summary>De ernstigste lekken per onderdeel, met hun bron</summary>', '', ...details, '', '</details>');
+
+          for (const s of storingen) regels.push('', ...s.tekst, nieuweStoring ? 'Dit meldt Lekcheck één keer. Komt dezelfde storing terug, dan blijft hij stil tot er iets verandert.' : 'Deze storing is eerder gemeld en duurt nog voort.');
+
+          // Waarom dit de uitkomst is.
+          regels.push('', '**Waarom dit de uitkomst is.**');
+          const aantalTekst = (n) => (n === 1 ? 'het ene onderdeel' : (n ? `de ${n} onderdelen` : 'de onderdelen'));
+          if (js) {
+            const lock = bron === 'npm' ? 'package-lock.json' : (omgezet ? 'bun.lockb (omgezet naar bun.lock, met dezelfde versies)' : 'bun.lock');
+            regels.push(`${bron} audit legde ${aantalTekst(js.n)} uit ${lock} naast de lijst van bekende lekken.`);
+          }
+          if (osv?.gelezen.length) {
+            regels.push(`OSV-Scanner van Google legde ${aantalTekst(osv.n)} uit ${toon(osv.gelezen, 15, code).join(', ')} naast de lekdatabase van osv.dev, op de runner van GitHub.`);
+            // Een manifest legt niet alle versies vast. Dat zegt de reactie erbij.
+            for (const f of osv.gelezen.filter((g) => /[^/]*requirements[^/]*\.txt$/.test(g))) {
+              const los = fs.readFileSync(f, 'utf8').split(/\r?\n/).map((r) => r.replace(/#.*/, '').trim())
+                .filter((r) => r && !r.startsWith('-') && !/^(git\+|https?:)/.test(r) && !r.includes('=='));
+              if (los.length) regels.push(`In ${code(f)} ${los.length === 1 ? 'staat 1 onderdeel' : `staan ${los.length} onderdelen`} zonder vaste versie (==). Daarvoor kiest OSV-Scanner zelf een versie, en in versie 2.7.1 is dat bij Python soms een oude. Dat is niet per se wat er bij jou draait.`);
+            }
+            if (osvPakketten.some((p) => p.berekend) || osv.pakketten.some((p) => p.berekend)) {
+              regels.push('"Berekend" betekent: die versie staat niet in je bestand. Wat onder een requirements.txt of pom.xml hangt, rekende deps.dev uit. Bij Python kiest OSV-Scanner 2.7.1 daar soms een oude versie. Op je server kan een andere versie staan. Met pip freeze > requirements.txt, of een lock-bestand zoals poetry.lock of uv.lock, liggen de echte versies vast.');
+            }
+            if (osv.zonderVersie.length) {
+              regels.push(`Zonder versie, dus niet getoetst: ${toon(osv.zonderVersie, 15, (p) => `${md(p.naam)} (${code(p.bestand)})`).join(', ')}. Een lek valt alleen te vinden bij een bekende versie.`);
+            }
+            const projecten = osv.gelezen.filter((g) => /\.(cs|fs|vb)proj$/.test(g));
+            if (projecten.length) regels.push(`Bij ${toon(projecten, 5, code).join(', ')} toetst hij alleen de onderdelen die erin staan, niet wat eronder hangt. Met RestorePackagesWithLockFile maakt .NET een packages.lock.json, en die is volledig.`);
+          }
+          if (getoetst) regels.push('Dat is een vaste regel: dezelfde versies geven elke dag dezelfde uitkomst. Er zit geen AI in deze toets.');
+          if (ook && bron !== 'geen') regels.push(`Er staat ook ${md(ook)} in de hoofdmap. Dat bestand is niet gelezen. Vraag je bouwtool welk lock-bestand actueel is.`);
+          if (nietGetoetst.length) regels.push(`Niet getoetst: ${toon(nietGetoetst, 15, (h) => `${code(h.pad)} (${h.taal}): ${h.reden}`).join('; ')}.`);
+          regels.push(OVERGESLAGEN);
+          const aantalLekken = (js?.lijst.length ?? 0) + osvLekken.length;
+          if (getoetst) {
+            if (!aantalLekken) {
+              regels.push('Lijst van CISA: geen lek om te toetsen.');
+            } else if (!kev) {
+              regels.push('Lijst van CISA: niet bereikbaar, dus niet nagekeken.');
+            } else if (zonderNummer) {
+              regels.push(`Lijst van CISA, versie ${kev.versie}: van ${zonderNummer} van de ${aantalLekken} lekken kon het CVE-nummer niet worden opgehaald. Die zijn niet nagekeken. Een lek dat niet op de lijst staat, kan toch misbruikt worden: de lijst noemt wat bewezen is.`);
+            } else {
+              regels.push(`Lijst van CISA, versie ${kev.versie}: getoetst op het CVE-nummer. Een lek dat niet op de lijst staat, kan toch misbruikt worden: de lijst noemt wat bewezen is.`);
+            }
+          }
+          if ((appPakketten.length && bron === 'npm') || osvPakketten.length) {
+            regels.push('Het werk is een voorstel. Of de update alles oplost, laat de toets van de volgende dag zien.');
+          }
+          if (metLek || bouwPakketten.length) {
+            regels.push('', 'Wat nu: plak deze reactie in de plak-prompt uit de blog (deel B). Je krijgt uitleg en een opdracht voor je bouwtool of je developer. Test een update eerst en publiceer daarna: de toets kijkt naar de code in GitHub, niet naar je live app.');
+          }
+          regels.push('', EIGEN);
+          if (tussendoor && vorige) regels.push('', 'Dit is een reactie tussendoor: er is iets nieuws sinds de vorige toets. De volgende gewone reactie komt morgenochtend.');
+          if (process.env.LEKCHECK_MELDEN === 'bij-nieuws') regels.push('', 'Lekcheck staat op "bij-nieuws": een reactie komt alleen bij een nieuw of opgelost lek of een storing, en op maandag altijd.');
           regels.push('', '<sub>Lekcheck leest alleen. Er is niets aan de code veranderd.</sub>');
-          console.log(regels.join('\n'));
 
-          // De nieuwe stand gaat terug in de tekst van de issue. Bij een mislukte toets blijft de oude staan.
-          if (nieuweStand) {
-            const zonderOud = issueTekst.replace(MARKER, '').replace(PAST_NIET, '').trim() || UITLEG;
-            fs.writeFileSync(`${map}/issue-nieuw.md`, `${zonderOud}\n\n<!-- lekcheck-stand: ${nieuweStand.join(',')} -->\n`);
+          // Een reactie op GitHub mag niet te lang zijn. Eerst gaan de details eruit, daarna rijen.
+          let reactie = regels.join('\n');
+          if (reactie.length > MAX_REACTIE) {
+            const zonder = regels.filter((r) => !details.includes(r) && r !== '</details>' && !r.startsWith('<details>'));
+            zonder.push('', 'De lijst per lek was te lang voor één reactie. De volledige reactie staat in de log van de run, onder Actions.');
+            reactie = zonder.join('\n');
+            console.error(regels.join('\n'));
           }
-          if (mislukt) process.exitCode = 2;
+          if (reactie.length > MAX_REACTIE) {
+            reactie = `${reactie.slice(0, MAX_REACTIE - 300)}\n\n**De reactie is afgekort.** De volledige reactie staat in de log van de run, onder Actions.`;
+          }
+          console.log(reactie);
+
+          // De stand gaat terug in de tekst van de issue, als korte codes. Kon een deel niet draaien, dan blijft de oude staan.
+          let tekst = issueTekst.replace(PAST_NIET, '').replace(STORING, '').trim();
+          if (getoetst && !storingen.length) tekst = `${tekst.replace(MARKER, '').trim()}\n\n<!-- lekcheck-stand: ${[...new Set(stand)].slice(0, 3000).join(',')} -->`;
+          if (storingen.length) tekst = `${tekst}\n\n<!-- lekcheck-storing: ${storingSleutel} -->`;
+          tekst = tekst.trim() || UITLEG;
+          if (tekst !== issueTekst.trim()) fs.writeFileSync(`${map}/issue-nieuw.md`, `${tekst.startsWith('<!--') ? `${UITLEG}\n\n` : ''}${tekst}\n`);
+          if (nieuweStoring) process.exitCode = 2;
           JS
           set +e
           node "$RUNNER_TEMP/lekcheck.mjs" > "$RUNNER_TEMP/reactie.md"
           echo "uitkomst=$?" >> "$GITHUB_OUTPUT"
 
-      # Uitkomst 3: de app past niet en dat is al eerder gemeld. Dan geen reactie en geen mail.
+      # Uitkomst 3: niets nieuws te melden (de app is niet te toetsen, of dezelfde storing duurt voort).
       - name: Reactie onder de issue Lekcheck
-        if: steps.rapport.outputs.uitkomst != '3'
+        if: steps.issue.outputs.stop != 'ja' && steps.rapport.outputs.uitkomst != '3'
         env:
           GH_TOKEN: ${{ github.token }}
           NUMMER: ${{ steps.issue.outputs.nummer }}
@@ -443,7 +882,7 @@ jobs:
           fi
 
       - name: Melden als de toets niet kon draaien
-        if: steps.rapport.outputs.uitkomst != '0' && steps.rapport.outputs.uitkomst != '3'
+        if: steps.issue.outputs.stop != 'ja' && steps.rapport.outputs.uitkomst != '0' && steps.rapport.outputs.uitkomst != '3'
         run: |
-          echo "De toets kon niet draaien. Zie de reactie onder de issue Lekcheck."
+          echo "De toets kon niet (helemaal) draaien. Zie de reactie onder de issue Lekcheck."
           exit 1
