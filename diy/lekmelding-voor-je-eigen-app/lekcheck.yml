@@ -13,6 +13,9 @@
 #    De issue onthoudt welke lekken er vorige keer waren, zodat de reactie zegt wat nieuw is.
 #    GitHub mailt de reactie naar wie de issue volgt. De eigenaar van de repository wordt
 #    eraan toegewezen en volgt hem daardoor vanzelf.
+# Lekcheck leest alleen JavaScript-apps. Vindt hij geen package-lock.json, bun.lock of bun.lockb in de hoofdmap,
+# dan zegt hij één keer welke taal hij wel vond en of GitHub daar zelf lekmeldingen voor maakt.
+# Daarna draait hij stil: geen reactie, geen mail en geen mislukte run.
 # Het leest alleen. Het verandert niets aan de code. Er zijn geen geheimen nodig:
 # de workflow gebruikt alleen de sleutel die GitHub bij elke run zelf maakt, met de twee rechten hieronder.
 
@@ -70,15 +73,33 @@ jobs:
           fi
           for f in yarn.lock pnpm-lock.yaml; do [ -f "$f" ] && ook="$ook $f"; done
           echo "ook=$ook" >> "$GITHUB_OUTPUT"
+          # Bestanden van andere talen die Lekcheck niet leest, tot zes mappen diep: een Xcode-app bewaart
+          # Package.resolved diep in de projectmap. De volgende stap zegt welke taal het is.
+          find . -maxdepth 6 \
+            \( -name node_modules -o -name .git -o -name Pods -o -name .build -o -name build -o -name dist \
+               -o -name vendor -o -name .venv -o -name venv -o -name DerivedData \) -prune -o \
+            \( -name package-lock.json -o -name bun.lock -o -name bun.lockb -o -name yarn.lock -o -name pnpm-lock.yaml -o -name Package.resolved \
+               -o -name Podfile.lock -o -name '*.xcodeproj' -o -name requirements.txt -o -name Pipfile.lock \
+               -o -name poetry.lock -o -name uv.lock -o -name pdm.lock -o -name Gemfile.lock -o -name go.mod \
+               -o -name Cargo.lock -o -name composer.lock -o -name pubspec.lock -o -name pom.xml \
+               -o -name build.gradle -o -name build.gradle.kts -o -name '*.csproj' -o -name mix.lock \) \
+            -print 2>/dev/null | sed 's|^\./||' | sort > "$uit/andere.txt" || true
 
       - name: Issue Lekcheck zoeken of aanmaken
         id: issue
         env:
           GH_TOKEN: ${{ github.token }}
+          BRON: ${{ steps.toets.outputs.bron }}
         run: |
           # Alleen een issue dat deze workflow zelf maakte. Een issue met dezelfde naam van iemand anders telt niet.
           nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title,author \
             --jq '[.[] | select(.title == "Lekcheck" and (.author.login | test("github-actions")))][0].number // empty')
+          # Past de app niet en sloot iemand de issue met die melding, dan telt die gesloten issue ook.
+          # Zo komt de melding niet opnieuw in een nieuwe issue.
+          if [ -z "$nummer" ] && [ "$BRON" = "geen" ]; then
+            nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state closed --limit 200 --json number,title,author,body \
+              --jq '[.[] | select(.title == "Lekcheck" and (.author.login | test("github-actions")) and (.body | test("lekcheck-past-niet")))][0].number // empty')
+          fi
           if [ -z "$nummer" ]; then
             uitleg="Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen."
             adres=$(gh issue create --repo "$GITHUB_REPOSITORY" --title "Lekcheck" --body "$uitleg" --assignee "$GITHUB_REPOSITORY_OWNER" 2>/dev/null \
@@ -108,6 +129,23 @@ jobs:
           const ERNST = ['critical', 'high', 'moderate', 'low', 'info'];
           const ERNST_NL = { critical: 'kritiek', high: 'hoog', moderate: 'middel', low: 'laag', info: 'info' };
           const MARKER = /<!-- lekcheck-stand: (.*?) -->/;
+          const PAST_NIET = /<!-- lekcheck-past-niet: (.*?) -->/;
+          // Per bestand: de taal, en of GitHub er zelf lekmeldingen (Dependabot alerts) uit maakt.
+          // Bron: de lijst van ondersteunde ecosystemen van de dependency graph van GitHub, 24-11-2026.
+          // package-lock.json, bun.lock en bun.lockb staan hier voor een submap: in de hoofdmap leest Lekcheck ze zelf.
+          const TALEN = [
+            ['package-lock.json', 'JavaScript in een submap', true], ['bun.lock', 'JavaScript in een submap', false],
+            ['bun.lockb', 'JavaScript in een submap', false],
+            ['yarn.lock', 'JavaScript met Yarn', true], ['pnpm-lock.yaml', 'JavaScript met pnpm', true],
+            ['Package.resolved', 'Swift', true],
+            ['Podfile.lock', 'Swift of Objective-C met CocoaPods', false], ['.xcodeproj', 'Swift of Objective-C', null],
+            ['requirements.txt', 'Python', true], ['Pipfile.lock', 'Python', true], ['poetry.lock', 'Python', true],
+            ['uv.lock', 'Python met uv', false], ['pdm.lock', 'Python met PDM', false], ['Gemfile.lock', 'Ruby', true],
+            ['go.mod', 'Go', true], ['Cargo.lock', 'Rust', true], ['composer.lock', 'PHP', true],
+            ['pubspec.lock', 'Dart of Flutter', true], ['pom.xml', 'Java met Maven', true],
+            ['build.gradle', 'Java of Kotlin met Gradle', false], ['build.gradle.kts', 'Kotlin met Gradle', false],
+            ['.csproj', 'C# of .NET', true], ['mix.lock', 'Elixir', false],
+          ];
           const UITLEG = 'Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen.';
           const NIET_GETOETST = 'Niet getoetst: je eigen instellingen, zoals beveiliging per rij en sleutels in de browser. Daarvoor de scan in Lovable (More > Security) of de Security Advisor van Supabase.';
 
@@ -127,6 +165,53 @@ jobs:
           const issueTekst = leesTekst('issue.md');
           const vorigeStand = issueTekst.match(MARKER);
           const vorige = vorigeStand ? new Set(vorigeStand[1].split(',').filter(Boolean)) : null;
+
+          // Wat er aan andere talen in de repository staat.
+          const LEEST_ZELF = new Set(['package-lock.json', 'bun.lock', 'bun.lockb']);
+          const herkend = leesTekst('andere.txt').split('\n').filter((pad) => pad && !LEEST_ZELF.has(pad)).flatMap((pad) => {
+            const naam = pad.split('/').pop();
+            const t = TALEN.find(([n]) => (n.startsWith('.') ? naam.endsWith(n) : naam === n));
+            return t ? [{ pad, taal: t[1], github: t[2] }] : [];
+          });
+          const swiftLijst = herkend.some((h) => /Package\.resolved$|Podfile\.lock$/.test(h.pad));
+          const anders = herkend.filter((h) => !(h.github === null && swiftLijst)).slice(0, 10);
+          // Bij een gewone toets: wat er naast de JavaScript-app staat en niet getoetst wordt.
+          const elders = anders.filter((h) => h.pad !== 'yarn.lock' && h.pad !== 'pnpm-lock.yaml');
+
+          // Past de app niet bij Lekcheck, dan zegt hij dat één keer. Daarna draait hij stil.
+          if (bron === 'geen') {
+            const sleutel = anders.length ? [...new Set(anders.map((h) => h.taal))].sort().join(', ')
+              : (fs.existsSync('package.json') ? 'package.json zonder lock-bestand' : 'niets herkend');
+            const eerder = issueTekst.match(PAST_NIET);
+            if (eerder && eerder[1] === sleutel) process.exit(3);
+            const r = [`**${datum}: Lekcheck past niet bij deze app.**`, '',
+              'Lekcheck toetst alleen JavaScript-apps met een package-lock.json, bun.lock of bun.lockb in de hoofdmap.'];
+            if (anders.length) {
+              r.push('', '| Gevonden | Taal | Maakt GitHub er zelf lekmeldingen uit? |', '|---|---|---|');
+              for (const h of anders) r.push(`| \`${h.pad}\` | ${h.taal} | ${h.github ? 'Ja' : 'Nee'} |`);
+              r.push('');
+              if (anders.some((h) => h.github)) {
+                r.push('Zet daarom Dependabot alerts aan, de bewaking van GitHub zelf: Settings > Advanced Security > Enable bij Dependabot alerts. GitHub mailt daarna standaard bij een nieuw lek met de ernst kritiek of hoog. Over lekken die er al zijn, mailt hij niet: kijk daarvoor één keer in het tabblad Security, bij Dependabot. Een samenvatting per week kan ook: Email weekly digest in je meldingen van GitHub.');
+                r.push('', 'Vanaf 8 december 2026 zet GitHub Dependabot uit op de meeste repositories zonder activiteit in het afgelopen jaar. Werk je lang niet aan de app, kijk dan in Settings of hij nog aanstaat.');
+              } else if (anders.some((h) => h.github === false)) {
+                r.push('Uit dit bestand maakt GitHub zelf geen lekmeldingen. Lekcheck leest het ook niet. Bij Gradle lukt het GitHub wel met Automatic dependency submission, onder Settings > Advanced Security. Dat kost minuten van GitHub Actions. Vraag anders je developer om een toets die het wel leest.');
+              } else {
+                r.push('Er staat geen lijst met de versies van de onderdelen in GitHub. Gebruikt de app pakketten van anderen, zet dan Package.resolved in GitHub: dat bestand maakt Xcode zelf. Daarna kan GitHub er lekmeldingen uit maken.');
+              }
+            } else if (fs.existsSync('package.json')) {
+              r.push('', 'Er staat wel een package.json, maar geen lock-bestand. Zonder lock-bestand zijn de precieze versies niet bekend. Vraag je bouwtool of developer om een package-lock.json te maken en die in GitHub te zetten. Dan toetst Lekcheck vanzelf.');
+            } else {
+              r.push('', 'In deze repository vond Lekcheck geen bestand dat hij kent. Controleer of de code van je app in deze repository staat.');
+            }
+            r.push('', 'Wat GitHub zelf in je repository ziet, staat bij Insights > Dependency graph.');
+            r.push('', 'Je mag deze workflow weghalen: verwijder .github/workflows/lekcheck.yml. Laat je hem staan, dan draait hij elke ochtend zonder reactie, zonder mail en zonder mislukte run. Op een privé-repository kost elke run wel een minuut van het gratis tegoed van GitHub. Komt er een lock-bestand bij dat Lekcheck leest, dan toetst hij vanzelf weer.');
+            r.push('', 'Dit bericht komt één keer. Vindt hij later iets anders, dan meldt hij zich opnieuw.');
+            r.push('', '<sub>Lekcheck leest alleen. Er is niets aan de code veranderd.</sub>');
+            console.log(r.join('\n'));
+            const zonderOud = issueTekst.replace(PAST_NIET, '').trim() || UITLEG;
+            fs.writeFileSync(`${map}/issue-nieuw.md`, `${zonderOud}\n\n<!-- lekcheck-past-niet: ${sleutel} -->\n`);
+            process.exit(0);
+          }
 
           // npm audit: {vulnerabilities: {pakket: {via: [...], fixAvailable}}}.
           // bun audit: de ruwe registry-respons {pakket: [advisory, ...]}.
@@ -219,21 +304,16 @@ jobs:
           let mislukt = false;
           let nieuweStand = null;
 
-          const app = bron === 'geen' ? null : lekken(leesJson('app.json'));
-          const alles = bron === 'geen' ? null : lekken(leesJson('alles.json'));
+          const app = lekken(leesJson('app.json'));
+          const alles = lekken(leesJson('alles.json'));
 
-          if (bron === 'geen' || !app || !alles) {
+          if (!app || !alles) {
             mislukt = true;
             regels.push(`**${datum}: de toets kon niet draaien.**`, '');
-            if (bron === 'geen') {
-              regels.push('Er staat geen bun.lock, bun.lockb of package-lock.json in de hoofdmap van deze repository. Zonder lock-bestand zijn de precieze versies niet bekend.');
-              if (ook) regels.push(`Wel gevonden: ${ook}. Dat lock-bestand kan deze toets niet lezen.`);
-            } else {
-              const fout = leesTekst('fout.txt').trim().slice(0, 600);
-              regels.push(`${bron} audit gaf geen bruikbare uitkomst. Morgen probeert de workflow het opnieuw.`);
-              if (bron === 'bun') regels.push('Gebruikt je bouwtool een nieuwere Bun? Zet dan in lekcheck.yml de regel bun-version op die versie.');
-              if (fout) regels.push('', '```', fout, '```');
-            }
+            const fout = leesTekst('fout.txt').trim().slice(0, 600);
+            regels.push(`${bron} audit gaf geen bruikbare uitkomst. Morgen probeert de workflow het opnieuw.`);
+            if (bron === 'bun') regels.push('Gebruikt je bouwtool een nieuwere Bun? Zet dan in lekcheck.yml de regel bun-version op die versie.');
+            if (fout) regels.push('', '```', fout, '```');
           } else {
             const sleutel = (l) => `${l.pakket} ${l.url}`;
             const code = (l) => `${l.pakket}:${(l.url ?? '').match(/GHSA-[\w-]+/)?.[0] ?? l.url}`;
@@ -279,7 +359,7 @@ jobs:
             else delen.push(nieuwTotaal ? `${nieuwTotaal} nieuw ${nieuwTotaal === 1 ? 'lek' : 'lekken'} sinds de vorige toets` : 'niets nieuws sinds de vorige toets');
 
             if (!appPakketten.length) {
-              regels.push(`**${datum}: geen bekend lek in de onderdelen (${delen[0]}).**`);
+              regels.push(`**${datum}: geen bekend lek in de ${elders.length ? 'JavaScript-onderdelen' : 'onderdelen'} (${delen[0]}).**`);
             } else {
               const deelsNagekeken = !kev || appPakketten.some((p) => nietNagekeken.has(p.naam));
               delen.push(`${appPakketten.length} ${appPakketten.length === 1 ? 'onderdeel' : 'onderdelen'} met een lek`);
@@ -317,6 +397,7 @@ jobs:
             regels.push('', '**Waarom dit de uitkomst is.**');
             regels.push(`${bron} audit legde ${n ? `de ${n} onderdelen` : 'de onderdelen'} uit ${lock} naast de lijst van bekende lekken. Dat is een vaste regel: dezelfde versies geven elke dag dezelfde uitkomst. Er zit geen AI in deze toets.`);
             if (ook) regels.push(`Er staat ook ${ook} in de repository. Dat bestand is niet gelezen. Vraag je bouwtool welk lock-bestand actueel is.`);
+            if (elders.length) regels.push(`Ook gevonden en niet getoetst: ${elders.map((h) => `${h.pad} (${h.taal})`).join(', ')}. Lekcheck leest alleen JavaScript.`);
             if (!lijst.length) {
               regels.push('Actief misbruik: geen lek om te toetsen.');
             } else if (!kev) {
@@ -340,7 +421,7 @@ jobs:
 
           // De nieuwe stand gaat terug in de tekst van de issue. Bij een mislukte toets blijft de oude staan.
           if (nieuweStand) {
-            const zonderOud = issueTekst.replace(MARKER, '').trim() || UITLEG;
+            const zonderOud = issueTekst.replace(MARKER, '').replace(PAST_NIET, '').trim() || UITLEG;
             fs.writeFileSync(`${map}/issue-nieuw.md`, `${zonderOud}\n\n<!-- lekcheck-stand: ${nieuweStand.join(',')} -->\n`);
           }
           if (mislukt) process.exitCode = 2;
@@ -349,7 +430,9 @@ jobs:
           node "$RUNNER_TEMP/lekcheck.mjs" > "$RUNNER_TEMP/reactie.md"
           echo "uitkomst=$?" >> "$GITHUB_OUTPUT"
 
+      # Uitkomst 3: de app past niet en dat is al eerder gemeld. Dan geen reactie en geen mail.
       - name: Reactie onder de issue Lekcheck
+        if: steps.rapport.outputs.uitkomst != '3'
         env:
           GH_TOKEN: ${{ github.token }}
           NUMMER: ${{ steps.issue.outputs.nummer }}
@@ -360,7 +443,7 @@ jobs:
           fi
 
       - name: Melden als de toets niet kon draaien
-        if: steps.rapport.outputs.uitkomst != '0'
+        if: steps.rapport.outputs.uitkomst != '0' && steps.rapport.outputs.uitkomst != '3'
         run: |
           echo "De toets kon niet draaien. Zie de reactie onder de issue Lekcheck."
           exit 1
