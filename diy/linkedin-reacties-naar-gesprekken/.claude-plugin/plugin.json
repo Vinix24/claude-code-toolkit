@@ -1,0 +1,8 @@
+{
+  "name": "linkedin-gesprekken",
+  "version": "1.0.0",
+  "description": "Dutch skills that turn reactions on your LinkedIn posts into conversations: a DM sequence per person built on your own customer and asset, answers to objections from a list you keep yourself, and a weekly funnel count with a fixed rule that names one bottleneck without AI. Posts and sends nothing.",
+  "author": {
+    "name": "Vinix24"
+  }
+}

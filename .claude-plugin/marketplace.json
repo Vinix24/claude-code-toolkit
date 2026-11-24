@@ -57,6 +57,12 @@
       "source": "./diy/search-console-maandcheck",
       "version": "1.0.0",
       "description": "Dutch monthly check on Google Search Console exports: AI feature impressions next to clicks, queries on positions 5 to 15, risers and fallers, and an update list. Calculates with code, shows the rule behind every list and holds comparisons until a core update has settled."
+    },
+    {
+      "name": "linkedin-gesprekken",
+      "source": "./diy/linkedin-reacties-naar-gesprekken",
+      "version": "1.0.0",
+      "description": "Dutch skills that turn reactions on your LinkedIn posts into conversations: a DM sequence per person built on your own customer and asset, answers to objections from a list you keep yourself, and a weekly funnel count with a fixed rule that names one bottleneck without AI. Posts and sends nothing."
     }
   ]
 }
