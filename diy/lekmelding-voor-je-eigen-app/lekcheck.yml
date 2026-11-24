@@ -1,0 +1,366 @@
+# Lekcheck: elke ochtend een reactie onder de issue "Lekcheck" over lekken in de onderdelen van deze app.
+#
+# Zet dit bestand in je repository op de plek .github/workflows/lekcheck.yml.
+# Uitleg stap voor stap: https://vincentvandeth.nl/blog/lekmelding-voor-je-eigen-app
+#
+# Wat het doet, zonder AI:
+# 1. Leest het lock-bestand van de app. Een lock-bestand van Bun (bun.lock of bun.lockb, zoals bij Lovable)
+#    gaat voor op package-lock.json, want Lovable installeert met Bun. Een bun.lockb wordt eerst omgezet
+#    naar bun.lock, met dezelfde versies. Er wordt niets geïnstalleerd.
+# 2. Laat bun audit of npm audit elk onderdeel naast de lijst van bekende lekken leggen.
+# 3. Kijkt per lek of het op de lijst van actief misbruikte lekken van CISA staat.
+# 4. Zet de uitkomst als reactie onder de issue "Lekcheck". Ook als er geen lek is.
+#    De issue onthoudt welke lekken er vorige keer waren, zodat de reactie zegt wat nieuw is.
+#    GitHub mailt de reactie naar wie de issue volgt. De eigenaar van de repository wordt
+#    eraan toegewezen en volgt hem daardoor vanzelf.
+# Het leest alleen. Het verandert niets aan de code. Er zijn geen geheimen nodig:
+# de workflow gebruikt alleen de sleutel die GitHub bij elke run zelf maakt, met de twee rechten hieronder.
+
+name: Lekcheck
+
+on:
+  schedule:
+    - cron: '30 7 * * *'
+      timezone: 'Europe/Amsterdam'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  lekcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # De actions en Bun staan vast op één versie, zodat een gewijzigde versie niet ongemerkt meedraait.
+      # Node.js en npm komen mee met de runner van GitHub.
+      - name: Code ophalen
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Bun klaarzetten (alleen bij een lock-bestand van Bun)
+        if: hashFiles('bun.lock', 'bun.lockb') != ''
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.5
+
+      - name: Onderdelen toetsen
+        id: toets
+        run: |
+          uit="$RUNNER_TEMP/lekcheck"
+          mkdir -p "$uit"
+          ook=""
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            echo "bron=bun" >> "$GITHUB_OUTPUT"
+            if [ ! -f bun.lock ]; then
+              echo "omgezet=ja" >> "$GITHUB_OUTPUT"
+              bun install --save-text-lockfile --frozen-lockfile --lockfile-only --ignore-scripts > "$uit/fout.txt" 2>&1 || true
+            fi
+            [ -f package-lock.json ] && ook="package-lock.json"
+            bun audit --json --prod > "$uit/app.json" 2>> "$uit/fout.txt" || true
+            bun audit --json > "$uit/alles.json" 2>> "$uit/fout.txt" || true
+          elif [ -f package-lock.json ]; then
+            echo "bron=npm" >> "$GITHUB_OUTPUT"
+            npm audit --json --omit=dev > "$uit/app.json" 2> "$uit/fout.txt" || true
+            npm audit --json > "$uit/alles.json" 2>> "$uit/fout.txt" || true
+          else
+            echo "bron=geen" >> "$GITHUB_OUTPUT"
+          fi
+          for f in yarn.lock pnpm-lock.yaml; do [ -f "$f" ] && ook="$ook $f"; done
+          echo "ook=$ook" >> "$GITHUB_OUTPUT"
+
+      - name: Issue Lekcheck zoeken of aanmaken
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Alleen een issue dat deze workflow zelf maakte. Een issue met dezelfde naam van iemand anders telt niet.
+          nummer=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title,author \
+            --jq '[.[] | select(.title == "Lekcheck" and (.author.login | test("github-actions")))][0].number // empty')
+          if [ -z "$nummer" ]; then
+            uitleg="Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen."
+            adres=$(gh issue create --repo "$GITHUB_REPOSITORY" --title "Lekcheck" --body "$uitleg" --assignee "$GITHUB_REPOSITORY_OWNER" 2>/dev/null \
+              || gh issue create --repo "$GITHUB_REPOSITORY" --title "Lekcheck" --body "$uitleg")
+            nummer="${adres##*/}"
+          fi
+          echo "nummer=$nummer" >> "$GITHUB_OUTPUT"
+          gh issue view "$nummer" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$RUNNER_TEMP/lekcheck/issue.md"
+
+      - name: Samenvatting maken
+        id: rapport
+        env:
+          BRON: ${{ steps.toets.outputs.bron }}
+          OMGEZET: ${{ steps.toets.outputs.omgezet }}
+          OOK: ${{ steps.toets.outputs.ook }}
+          LEKCHECK_MAP: ${{ runner.temp }}/lekcheck
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > "$RUNNER_TEMP/lekcheck.mjs" <<'JS'
+          import fs from 'node:fs';
+
+          const map = process.env.LEKCHECK_MAP;
+          const bron = process.env.BRON;
+          const token = process.env.GH_TOKEN;
+          const ook = (process.env.OOK ?? '').trim();
+          const omgezet = process.env.OMGEZET === 'ja';
+          const ERNST = ['critical', 'high', 'moderate', 'low', 'info'];
+          const ERNST_NL = { critical: 'kritiek', high: 'hoog', moderate: 'middel', low: 'laag', info: 'info' };
+          const MARKER = /<!-- lekcheck-stand: (.*?) -->/;
+          const UITLEG = 'Hier zet de workflow Lekcheck elke ochtend een reactie over lekken in de onderdelen van deze app. Volg deze issue om die reactie per mail te krijgen.';
+          const NIET_GETOETST = 'Niet getoetst: je eigen instellingen, zoals beveiliging per rij en sleutels in de browser. Daarvoor de scan in Lovable (More > Security) of de Security Advisor van Supabase.';
+
+          const dag = new Intl.DateTimeFormat('nl-NL', {
+            timeZone: 'Europe/Amsterdam', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          }).format(new Date());
+          const datum = dag.charAt(0).toUpperCase() + dag.slice(1);
+
+          function leesTekst(naam) {
+            try { return fs.readFileSync(`${map}/${naam}`, 'utf8'); } catch { return ''; }
+          }
+          function leesJson(naam) {
+            try { return JSON.parse(leesTekst(naam)); } catch { return null; }
+          }
+
+          // De stand van de vorige keer staat als verborgen regel in de tekst van de issue.
+          const issueTekst = leesTekst('issue.md');
+          const vorigeStand = issueTekst.match(MARKER);
+          const vorige = vorigeStand ? new Set(vorigeStand[1].split(',').filter(Boolean)) : null;
+
+          // npm audit: {vulnerabilities: {pakket: {via: [...], fixAvailable}}}.
+          // bun audit: de ruwe registry-respons {pakket: [advisory, ...]}.
+          function lekken(d) {
+            if (!d || typeof d !== 'object' || Array.isArray(d) || d.error) return null;
+            const lijst = [];
+            if (bron === 'npm') {
+              if (!d.vulnerabilities) return null;
+              for (const [pakket, v] of Object.entries(d.vulnerabilities)) {
+                for (const via of v.via) {
+                  if (typeof via === 'object') {
+                    lijst.push({ pakket, url: via.url, titel: via.title, ernst: via.severity, reeks: via.range, fix: v.fixAvailable });
+                  }
+                }
+              }
+            } else {
+              for (const [pakket, adviezen] of Object.entries(d)) {
+                if (!Array.isArray(adviezen)) return null;
+                for (const a of adviezen) {
+                  lijst.push({ pakket, url: a.url, titel: a.title, ernst: a.severity, reeks: a.vulnerable_versions });
+                }
+              }
+            }
+            return lijst;
+          }
+
+          function aantalOnderdelen(d) {
+            if (bron === 'npm') return d?.metadata?.dependencies?.total ?? null;
+            try {
+              const deel = fs.readFileSync('bun.lock', 'utf8').split('"packages": {')[1] ?? '';
+              return (deel.match(/^ {4}"[^"]+": \[/gm) || []).length;
+            } catch { return null; }
+          }
+
+          // De versie die nu in de app zit, uit het lock-bestand zelf.
+          function versies(pakket) {
+            try {
+              if (bron === 'npm') {
+                const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+                const gevonden = new Set();
+                for (const [pad, info] of Object.entries(lock.packages ?? {})) {
+                  if ((pad === `node_modules/${pakket}` || pad.endsWith(`/node_modules/${pakket}`)) && info.version) gevonden.add(info.version);
+                }
+                return [...gevonden];
+              }
+              const lock = fs.readFileSync('bun.lock', 'utf8');
+              const naam = pakket.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
+              return [...new Set([...lock.matchAll(new RegExp(`"${naam}@([^"]+)"`, 'g'))].map((m) => m[1]))];
+            } catch { return []; }
+          }
+
+          async function haal(url, kop = {}) {
+            const r = await fetch(url, { headers: { 'user-agent': 'lekcheck-workflow', ...kop } });
+            if (!r.ok) throw new Error(`${r.status} bij ${url}`);
+            return r.json();
+          }
+
+          async function kevLijst() {
+            const adressen = [
+              'https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json',
+              'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+            ];
+            for (const adres of adressen) {
+              try {
+                const d = await haal(adres);
+                return { versie: d.catalogVersion, cves: new Map(d.vulnerabilities.map((v) => [v.cveID, v.dateAdded])) };
+              } catch { /* volgende adres */ }
+            }
+            return null;
+          }
+
+          // Het CVE-veld van een advisory is soms leeg terwijl het nummer wel in de bronnen staat.
+          async function cveNummers(ghsa) {
+            const kop = token ? { authorization: `Bearer ${token}` } : {};
+            const a = await haal(`https://api.github.com/advisories/${ghsa}`, kop);
+            const tekst = [a.cve_id ?? '', ...(a.identifiers ?? []).map((i) => i.value), ...(a.references ?? [])].join(' ');
+            return [...new Set(tekst.match(/CVE-\d{4}-\d{4,}/g) ?? [])];
+          }
+
+          // npm audit geeft een voorstel. Of het alles oplost, laat de toets van de volgende dag zien.
+          function werk(fix) {
+            if (fix === undefined) return 'Werk het onderdeel bij tot een versie buiten de getroffen reeks';
+            if (fix === false) return 'Volgens npm audit: nog geen oplossing';
+            if (fix === true) return 'Volgens npm audit: klein, met `npm audit fix`';
+            if (fix.isSemVerMajor) return `Volgens npm audit: groot. ${fix.name} naar ${fix.version}, een nieuw eerste versienummer`;
+            return `Volgens npm audit: klein. ${fix.name} naar ${fix.version}`;
+          }
+
+          const regels = [];
+          let mislukt = false;
+          let nieuweStand = null;
+
+          const app = bron === 'geen' ? null : lekken(leesJson('app.json'));
+          const alles = bron === 'geen' ? null : lekken(leesJson('alles.json'));
+
+          if (bron === 'geen' || !app || !alles) {
+            mislukt = true;
+            regels.push(`**${datum}: de toets kon niet draaien.**`, '');
+            if (bron === 'geen') {
+              regels.push('Er staat geen bun.lock, bun.lockb of package-lock.json in de hoofdmap van deze repository. Zonder lock-bestand zijn de precieze versies niet bekend.');
+              if (ook) regels.push(`Wel gevonden: ${ook}. Dat lock-bestand kan deze toets niet lezen.`);
+            } else {
+              const fout = leesTekst('fout.txt').trim().slice(0, 600);
+              regels.push(`${bron} audit gaf geen bruikbare uitkomst. Morgen probeert de workflow het opnieuw.`);
+              if (bron === 'bun') regels.push('Gebruikt je bouwtool een nieuwere Bun? Zet dan in lekcheck.yml de regel bun-version op die versie.');
+              if (fout) regels.push('', '```', fout, '```');
+            }
+          } else {
+            const sleutel = (l) => `${l.pakket} ${l.url}`;
+            const code = (l) => `${l.pakket}:${(l.url ?? '').match(/GHSA-[\w-]+/)?.[0] ?? l.url}`;
+            const inApp = new Set(app.map(sleutel));
+            const uniek = new Map(alles.map((l) => [sleutel(l), { ...l, inApp: inApp.has(sleutel(l)) }]));
+            const lijst = [...uniek.values()];
+            for (const l of lijst) l.nieuw = vorige ? !vorige.has(code(l)) : false;
+            nieuweStand = lijst.map(code);
+
+            const kev = lijst.length ? await kevLijst() : null;
+            const nietNagekeken = new Set();
+            let zonderNummer = 0;
+            for (const l of lijst) {
+              const ghsa = (l.url ?? '').match(/GHSA-[\w-]+/)?.[0];
+              l.cves = [];
+              if (!ghsa) { nietNagekeken.add(l.pakket); zonderNummer += 1; continue; }
+              try { l.cves = await cveNummers(ghsa); } catch { nietNagekeken.add(l.pakket); zonderNummer += 1; }
+              l.misbruikt = kev ? l.cves.filter((c) => kev.cves.has(c)) : [];
+            }
+
+            const perPakket = new Map();
+            for (const l of lijst) {
+              if (!perPakket.has(l.pakket)) perPakket.set(l.pakket, []);
+              perPakket.get(l.pakket).push(l);
+            }
+            const pakketten = [...perPakket.entries()].map(([naam, ls]) => ({
+              naam,
+              lekken: ls,
+              ernst: ERNST.find((e) => ls.some((l) => l.ernst === e)) ?? 'info',
+              inApp: ls.some((l) => l.inApp),
+              nieuw: ls.filter((l) => l.nieuw && l.inApp).length,
+              misbruikt: [...new Set(ls.flatMap((l) => l.misbruikt ?? []))],
+            })).sort((a, b) => (b.misbruikt.length - a.misbruikt.length) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+
+            const appPakketten = pakketten.filter((p) => p.inApp);
+            const bouwPakketten = pakketten.filter((p) => !p.inApp);
+            const misbruikt = [...new Set(appPakketten.flatMap((p) => p.misbruikt))];
+            const nieuwTotaal = appPakketten.reduce((n, p) => n + p.nieuw, 0);
+            const n = aantalOnderdelen(leesJson('alles.json'));
+
+            const delen = [];
+            if (!vorige) delen.push('eerste toets');
+            else delen.push(nieuwTotaal ? `${nieuwTotaal} nieuw ${nieuwTotaal === 1 ? 'lek' : 'lekken'} sinds de vorige toets` : 'niets nieuws sinds de vorige toets');
+
+            if (!appPakketten.length) {
+              regels.push(`**${datum}: geen bekend lek in de onderdelen (${delen[0]}).**`);
+            } else {
+              const deelsNagekeken = !kev || appPakketten.some((p) => nietNagekeken.has(p.naam));
+              delen.push(`${appPakketten.length} ${appPakketten.length === 1 ? 'onderdeel' : 'onderdelen'} met een lek`);
+              delen.push(misbruikt.length
+                ? `${misbruikt.length === 1 ? '1 lek dat' : `${misbruikt.length} lekken die`} aanvallers al gebruiken`
+                : (deelsNagekeken ? 'actief misbruik niet (volledig) nagekeken' : 'geen lek dat aanvallers al gebruiken'));
+              regels.push(`**${datum}: ${delen.join(', ')}.**`, '');
+              regels.push('| Onderdeel | Jouw versie | Ernst | Actief misbruikt | Lekken | Wat het werk is |', '|---|---|---|---|---|---|');
+              for (const p of appPakketten) {
+                const kevTekst = p.misbruikt.length
+                  ? `Ja: ${p.misbruikt.map((c) => `${c}, op de lijst sinds ${kev.cves.get(c)}`).join('; ')}`
+                  : (kev && !nietNagekeken.has(p.naam) ? 'Nee' : 'Niet nagekeken');
+                const versie = versies(p.naam).join(', ') || 'onbekend';
+                const naam = p.nieuw ? `${p.naam} (${p.nieuw} nieuw)` : p.naam;
+                regels.push(`| ${naam} | ${versie} | ${ERNST_NL[p.ernst]} | ${kevTekst} | ${p.lekken.length} | ${werk(p.lekken[0].fix)} |`);
+              }
+              regels.push('', '<details><summary>De ernstigste lekken per onderdeel, met hun bron</summary>', '');
+              for (const p of appPakketten) {
+                const volgorde = [...p.lekken].sort((a, b) => (Number(b.nieuw) - Number(a.nieuw)) || ((b.misbruikt?.length ?? 0) - (a.misbruikt?.length ?? 0)) || (ERNST.indexOf(a.ernst) - ERNST.indexOf(b.ernst)));
+                for (const l of volgorde.slice(0, 5)) {
+                  const kevNoot = l.misbruikt?.length ? ` **Op de lijst van CISA: ${l.misbruikt.join(', ')}.**` : '';
+                  const nieuwNoot = l.nieuw ? '**Nieuw.** ' : '';
+                  regels.push(`- ${nieuwNoot}${p.naam} (getroffen: ${l.reeks}), ${ERNST_NL[l.ernst] ?? l.ernst}: [${l.titel}](${l.url})${kevNoot}`);
+                }
+                if (volgorde.length > 5) regels.push(`- ${p.naam}: nog ${volgorde.length - 5} lekken.`);
+              }
+              regels.push('', '</details>');
+            }
+
+            if (bouwPakketten.length) {
+              regels.push('', `Alleen bij het bouwen: ${bouwPakketten.map((p) => `${p.naam} (${ERNST_NL[p.ernst]})`).join(', ')}. Die draaien niet in de app zelf.`);
+            }
+
+            const lock = bron === 'npm' ? 'package-lock.json' : (omgezet ? 'bun.lockb (omgezet naar bun.lock, met dezelfde versies)' : 'bun.lock');
+            regels.push('', '**Waarom dit de uitkomst is.**');
+            regels.push(`${bron} audit legde ${n ? `de ${n} onderdelen` : 'de onderdelen'} uit ${lock} naast de lijst van bekende lekken. Dat is een vaste regel: dezelfde versies geven elke dag dezelfde uitkomst. Er zit geen AI in deze toets.`);
+            if (ook) regels.push(`Er staat ook ${ook} in de repository. Dat bestand is niet gelezen. Vraag je bouwtool welk lock-bestand actueel is.`);
+            if (!lijst.length) {
+              regels.push('Actief misbruik: geen lek om te toetsen.');
+            } else if (!kev) {
+              regels.push('Actief misbruik: de lijst van CISA was niet bereikbaar, dus niet nagekeken.');
+            } else if (zonderNummer) {
+              regels.push(`Actief misbruik: getoetst aan de lijst van CISA, versie ${kev.versie}. Van ${zonderNummer} van de ${lijst.length} lekken kon het CVE-nummer niet worden opgehaald. Die zijn niet nagekeken.`);
+            } else {
+              regels.push(`Actief misbruik: getoetst aan de lijst van CISA, versie ${kev.versie}.`);
+            }
+            if (appPakketten.length && bron === 'npm') {
+              regels.push('Het werk is een voorstel van npm audit. Of de update alles oplost, laat de toets van de volgende dag zien.');
+            }
+            if (appPakketten.length) {
+              regels.push('', 'Wat nu: plak deze reactie in de plak-prompt uit de blog (deel B). Je krijgt uitleg en een opdracht voor je bouwtool of je developer. Test een update eerst en publiceer daarna: de toets kijkt naar de code in GitHub, niet naar je live app.');
+            }
+          }
+
+          regels.push('', NIET_GETOETST);
+          regels.push('', '<sub>Lekcheck leest alleen. Er is niets aan de code veranderd.</sub>');
+          console.log(regels.join('\n'));
+
+          // De nieuwe stand gaat terug in de tekst van de issue. Bij een mislukte toets blijft de oude staan.
+          if (nieuweStand) {
+            const zonderOud = issueTekst.replace(MARKER, '').trim() || UITLEG;
+            fs.writeFileSync(`${map}/issue-nieuw.md`, `${zonderOud}\n\n<!-- lekcheck-stand: ${nieuweStand.join(',')} -->\n`);
+          }
+          if (mislukt) process.exitCode = 2;
+          JS
+          set +e
+          node "$RUNNER_TEMP/lekcheck.mjs" > "$RUNNER_TEMP/reactie.md"
+          echo "uitkomst=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Reactie onder de issue Lekcheck
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMMER: ${{ steps.issue.outputs.nummer }}
+        run: |
+          gh issue comment "$NUMMER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/reactie.md"
+          if [ -f "$RUNNER_TEMP/lekcheck/issue-nieuw.md" ]; then
+            gh issue edit "$NUMMER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/lekcheck/issue-nieuw.md"
+          fi
+
+      - name: Melden als de toets niet kon draaien
+        if: steps.rapport.outputs.uitkomst != '0'
+        run: |
+          echo "De toets kon niet draaien. Zie de reactie onder de issue Lekcheck."
+          exit 1
