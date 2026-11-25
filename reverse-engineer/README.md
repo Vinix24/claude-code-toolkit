@@ -60,7 +60,10 @@ Before anything is built, the skill checks whether the answer already exists:
 - in the post itself (many gates list the full content),
 - in an update or a comment by the maker (the promised file is sometimes already public),
 - as a free or cheap product,
-- as a starting point in an existing repository, usually on GitHub. The skill always looks for one, also when the outcome is to build.
+- as a starting point in an existing repository, usually on GitHub. The skill always looks for one, also when the outcome is to build. When the post or the image lists names of skills, files or templates, it searches those names literally first: such a list is often complete in one public repository,
+- in the reader's own earlier work: a skill, a prompt or an earlier answer that uses the same mechanism.
+
+When the post is about a new feature from a vendor, the skill first reads what that feature does not deliver, in the vendor's own documentation. The gap between the promise and the data source is often the hard part. Before it raises an objection to the maker's work, it looks for the maker's own measurements, such as tests in the repository.
 
 A repository is only named after the skill opened it and checked five things on the page: last change within a year, a licence (none means it cannot be used), stars as a signal, a README that says how to start it, and a size the reader can follow. At most three. The first build step is then to have the repository explained with [`onder-de-motorkap`](../onder-de-motorkap/) before running any of it.
 
@@ -102,7 +105,7 @@ Every answer has these sections, in this order. The whole answer is at most 1,20
 4. **Het lastige stuk.** The one part that takes real effort. Most of any build is routine; this section names the part that is not.
 5. **Tijd.** How long a first build takes and how long a practised one takes. Stated as an estimate, with what it depends on.
 6. **Wat zelfbouw niet doet.** The limits, before you start: upkeep, payments, security, the maker's own expertise.
-7. **Zo bouw je het.** Steps that run, in order, with the exact prompt or file where one is needed, and what to do where it usually gets stuck.
+7. **Zo bouw je het.** Steps that run, in order, with the exact prompt or file where one is needed, and what to do where it usually gets stuck. For an analysis of an export, the prompt has the model compute with code and puts the deciding rule above every list.
 8. **De vastlegging.** For a search request: every condition from the post as a row, in the skill's own words, with how to test it and whether it is met. For a gate: every promised part and whether your build covers it. Before the build the last column says "nog te toetsen".
 
 The answer never copies the post. Conditions and promises are described in the skill's own words, so the answer can be published without the maker's text.

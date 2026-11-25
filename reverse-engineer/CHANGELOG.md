@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+From four later cases, each of which added a search place to step 2.
+
+- Step 2 also looks in the reader's own earlier work: a skill, a prompt or an earlier answer with the same mechanism.
+- Names of skills, files or templates in the post or the image are searched literally on GitHub first. Such a list is often complete in one public repository.
+- For a new vendor feature, the skill first reads what the feature does not deliver. That gap is often the hard part.
+- Before raising an objection to the maker's work, the skill looks for the maker's own measurements.
+- An analysis of an export is computed with code, with the deciding rule above every list. A model that only reads a table fills gaps with links that are not in the data.
+- Same changes in `PLAK-PROMPT.md`.
+
 ## 1.0.1
 
 - The last section is now called "De vastlegging" instead of "Het bonnetje": it records what was checked, and often says "nog te toetsen" or "niet gemeten".

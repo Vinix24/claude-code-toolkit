@@ -63,12 +63,17 @@ Kijk voordat je iets laat bouwen of het antwoord al bestaat. Dit is vaak de bela
 2. **In een update of een comment van de maker.** Soms heeft de maker het beloofde inmiddels openbaar gezet. Kijk in de laatste comments en in een "update" onderaan de post.
 3. **Als product.** Bestaat het gratis of goedkoop? Zoek het op als je kunt zoeken. Gebruik de zoekfunctie die je hebt: de ingebouwde webzoeker of een zoekdienst die je zelf hebt gekoppeld. Een samenvatting van een zoekdienst is een wegwijzer, geen bron: open de pagina zelf. Formuleer de zoekvraag zelf en plak er niet de post in. Een link noem je alleen als je hem geopend hebt. Anders geef je de zoekterm die het dichtst in de buurt komt.
 4. **Als startpunt in een bestaande repo.** Zoek dit altijd, ook als de uitkomst bouwen wordt. Een repo is een openbare map met code, meestal op GitHub. Vaak heeft iemand het lastige stuk al gebouwd en vrijgegeven. Dan begint de lezer daar en niet bij nul. Hoe je zoekt en toetst staat hieronder.
+5. **In eerder werk van de lezer.** Heeft de lezer al een skill, een prompt of een eerder antwoord dat hetzelfde mechanisme gebruikt? Vraag ernaar bij de situatie en kijk in de skills en mappen die je kunt zien. Bouw dan daarop verder. Een tweede versie van hetzelfde mechanisme voegt weinig toe.
+
+**Gaat de post over een nieuwe functie van een leverancier?** Lees dan eerst wat die functie níet levert: welke gegevens erin zitten en voor welk abonnement of land hij geldt. Zoek dat op in de documentatie van de leverancier zelf. Het gat tussen de belofte en wat de bron levert, is vaak het lastige stuk uit kopje 4.
 
 Bestaat het al? Dan luidt de uitkomst "koop het gewoon" of "haal het daar". Dat is een goede uitkomst. Het bespaart de lezer een avond.
 
 ### Een startpunt zoeken
 
-Zoek op GitHub. Bij een automatisering zoek je ook in de sjablonen van n8n, Make of Zapier. Zoek in het Engels, op het probleem plus het soort ding: "quiz funnel", "meeting notes local", "product landing page shopify". Op GitHub helpt een filter als `stars:>100` en een datum van een jaar terug bij `pushed:>`.
+Noemt de post of de afbeelding losse namen van skills, bestanden of templates? Zoek die namen dan eerst letterlijk op GitHub, tussen aanhalingstekens. Zo'n lijst staat vaak al compleet in één openbare repo.
+
+Zoek daarna verder op GitHub. Bij een automatisering zoek je ook in de sjablonen van n8n, Make of Zapier. Zoek in het Engels, op het probleem plus het soort ding: "quiz funnel", "meeting notes local", "product landing page shopify". Op GitHub helpt een filter als `stars:>100` en een datum van een jaar terug bij `pushed:>`.
 
 Toets elke repo op de pagina zelf. Noem wat je zag en op welke datum.
 
@@ -87,6 +92,8 @@ Draai nooit code uit een repo die niemand gelezen heeft. Laat de lezer de repo e
 Is de repo zelf al het antwoord, gratis en bruikbaar zoals hij is? Dan is de uitkomst "koop het gewoon". Zeg er dan bij wat het kost om hem te laten draaien: hosting, onderhoud, een eigen sleutel voor een AI-dienst.
 
 Soms is het eigen onderzoek van de maker de waarde, zoals een vergelijking van tien leveranciers of juridische uitleg. Zeg dat ook. Dat werk bouw je niet na. Je laat zien hoe de lezer het voor zijn eigen situatie toetst.
+
+Zoek de eigen metingen van de maker op voordat je een bezwaar tegen zijn werk opschrijft. Denk aan tests of metingen in zijn repo, of een uitleg van zijn keuzes in de README. Zijn meting kan je bezwaar weerleggen. Noem hem dan, ook als je reden daardoor vervalt.
 
 ## Stap 3: kies de vorm
 
@@ -158,7 +165,7 @@ De vorm uit stap 3, vetgedrukt, met de reden. Eén alinea.
 
 ### 3. Wat er al is
 
-Wat al in de post staat, wat de maker zelf al openbaar heeft gezet en wat al bestaat als product of als repo. Met links die je geopend hebt, of met zoektermen. Bij een repo de toets uit "Een startpunt zoeken": wat je zag en wanneer.
+Wat al in de post staat, wat de maker zelf al openbaar heeft gezet, wat de lezer zelf al heeft en wat al bestaat als product of als repo. Met links die je geopend hebt, of met zoektermen. Bij een repo de toets uit "Een startpunt zoeken": wat je zag en wanneer.
 
 ### 4. Het lastige stuk
 
@@ -220,6 +227,7 @@ Regels voor de stappen:
 - **Bij een skill of plugin:** geef het bestand of de opbouw. Laat zien welke skill wat doet en wat hij doorgeeft aan de volgende. Installeren in Claude Code of de Claude-app noem je in één regel. Wil de lezer er zelf een maken, verwijs dan naar de skill-creator van Claude: die helpt een eigen skill op te zetten.
 - **Bij een tool of site:** geef de opdracht voor de AI-assistent als één prompt, met de voorwaarden uit de vastlegging erin. Zit er een model in, zeg dan: bouw eerst het deel met vaste regels.
 - **Bij een automatisering:** noem de trigger, elke stap en de app per stap. Geef een sjabloon als stap 2 er een vond.
+- **Bij een analyse op een export**, zoals een tabel uit Search Console, je CRM of je boekhouding: laat de prompt het model rekenen met code. Lezen alleen is niet genoeg. Zet de regel die besliste boven elke lijst. Een model dat een tabel alleen leest, vult gaten met verbanden die niet in de data staan.
 
 ### 8. De vastlegging
 
