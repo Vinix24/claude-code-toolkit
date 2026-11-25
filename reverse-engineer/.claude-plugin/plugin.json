@@ -1,6 +1,6 @@
 {
   "name": "reverse-engineer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Dutch skill that helps you build what a LinkedIn post promises or asks for: comment gates and search requests. Chooses the form first (paste prompt, skill, plugin, proof of concept, site or just buy it), names the hard part, the time and what self-build does not do. Comes with a paste prompt for ChatGPT and Claude in the browser.",
   "author": {
     "name": "Vinix24"
