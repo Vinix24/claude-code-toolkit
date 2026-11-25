@@ -63,6 +63,12 @@
       "source": "./diy/linkedin-reacties-naar-gesprekken",
       "version": "1.0.0",
       "description": "Dutch skills that turn reactions on your LinkedIn posts into conversations: a DM sequence per person built on your own customer and asset, answers to objections from a list you keep yourself, and a weekly funnel count with a fixed rule that names one bottleneck without AI. Posts and sends nothing."
+    },
+    {
+      "name": "werving-en-selectie",
+      "source": "./diy/recruitment-met-claude",
+      "version": "1.0.0",
+      "description": "Recruitmentassistent voor werving, selectie en behoud, met een stoplicht per taak. Is ingesteld om geen kandidaat of medewerker te beoordelen."
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "name": "werving-en-selectie",
+  "description": "Recruitmentassistent voor werving, selectie en behoud, met een stoplicht per taak. Is ingesteld om geen kandidaat of medewerker te beoordelen.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Vincent van Deth",
+    "url": "https://vincentvandeth.nl"
+  },
+  "homepage": "https://vincentvandeth.nl/blog/recruitment-met-claude",
+  "keywords": ["recruitment", "werving", "selectie", "hr", "avg", "ai-verordening"]
+}
